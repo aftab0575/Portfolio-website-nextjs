@@ -1,0 +1,32 @@
+export const routes = {
+  home: '/',
+  about: '/about',
+  projects: '/projects',
+  skills: '/skills',
+  experience: '/experience',
+  contact: '/contact',
+  themes: '/themes',
+  admin: {
+    login: '/admin/login',
+    dashboard: '/admin/dashboard',
+    projects: '/admin/projects',
+    skills: '/admin/skills',
+    experience: '/admin/experience',
+    messages: '/admin/messages',
+    themes: '/admin/themes',
+  },
+  api: {
+    auth: {
+      login: '/api/auth/login',
+      logout: '/api/auth/logout',
+      me: '/api/auth/me',
+    },
+    projects: '/api/projects',
+    skills: '/api/skills',
+    experience: '/api/experience',
+    contact: '/api/contact',
+    upload: '/api/upload',
+    themes: '/api/themes',
+  },
+} as const
+

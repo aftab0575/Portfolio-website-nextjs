@@ -1,0 +1,53 @@
+{
+  "name": "portfolio-website",
+  "version": "1.0.0",
+  "description": "Full-stack portfolio website with Next.js, TypeScript, MongoDB, and Cloudinary",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "init-admin": "node scripts/init-admin.js"
+  },
+  "keywords": [
+    "portfolio",
+    "nextjs",
+    "typescript",
+    "mongodb",
+    "cloudinary"
+  ],
+  "author": "Aftab Bashir",
+  "license": "MIT",
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.0.0",
+    "bcryptjs": "^2.4.3",
+    "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.8.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^10.16.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.294.0",
+    "mongoose": "^8.0.0",
+    "next": "^16.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^9.0.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.1",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.0"
+  }
+}
