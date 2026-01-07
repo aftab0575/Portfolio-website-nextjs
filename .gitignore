@@ -9,6 +9,14 @@
 # testing
 /coverage
 *.lcov
+/tests
+__tests__/
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
 
 # next.js
 /.next/
@@ -41,6 +49,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Kiro IDE files
+.kiro/
 
 # IDEs and editors
 .vscode/

@@ -1,114 +1,162 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import apiClient from '@/services/apiClient'
+import { siteConfig } from '@/constants/site'
+import { Mail, MapPin, Phone, Send } from 'lucide-react'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    message: '',
+    subject: '',
+    message: ''
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-    setSubmitStatus('idle')
+    // Handle form submission - integrate with your API
+    console.log('Form submitted:', formData)
+  }
 
-    try {
-      const response = await apiClient.post('/api/contact', formData)
-      if (response.success) {
-        setSubmitStatus('success')
-        setFormData({ name: '', email: '', message: '' })
-      } else {
-        setSubmitStatus('error')
-      }
-    } catch (error) {
-      setSubmitStatus('error')
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
   }
 
   return (
     <main className="min-h-screen py-20">
       <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4 text-center">Get In Touch</h1>
-          <p className="text-gray-600 text-center mb-12">
-            Have a question or want to work together? Send me a message!
-          </p>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h1 className="text-4xl sm:text-5xl font-bold mb-6">Get In Touch</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Have a project in mind? Let's discuss how we can work together to bring your ideas to life.
+            </p>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Form</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">
-                    Name
-                  </label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2">
-                    Email
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    className="w-full min-h-[150px] px-3 py-2 border rounded-md"
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    required
-                  />
-                </div>
-
-                {submitStatus === 'success' && (
-                  <div className="p-3 bg-green-50 text-green-700 rounded-md">
-                    Message sent successfully!
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Contact Information */}
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-semibold mb-6">Contact Information</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <Mail className="w-5 h-5 text-primary mr-4" />
+                    <div>
+                      <p className="font-medium">Email</p>
+                      <a href={`mailto:${siteConfig.email}`} className="text-muted-foreground hover:text-primary">
+                        {siteConfig.email}
+                      </a>
+                    </div>
                   </div>
-                )}
-
-                {submitStatus === 'error' && (
-                  <div className="p-3 bg-red-50 text-red-700 rounded-md">
-                    Failed to send message. Please try again.
+                  
+                  <div className="flex items-center">
+                    <Phone className="w-5 h-5 text-primary mr-4" />
+                    <div>
+                      <p className="font-medium">Phone</p>
+                      <a href={`tel:${siteConfig.phone}`} className="text-muted-foreground hover:text-primary">
+                        {siteConfig.phone}
+                      </a>
+                    </div>
                   </div>
-                )}
+                  
+                  <div className="flex items-center">
+                    <MapPin className="w-5 h-5 text-primary mr-4" />
+                    <div>
+                      <p className="font-medium">Location</p>
+                      <p className="text-muted-foreground">{siteConfig.location}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Availability</h3>
+                <p className="text-muted-foreground">{siteConfig.availability}</p>
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <Card>
+              <CardContent className="p-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium mb-2">
+                        Name *
+                      </label>
+                      <Input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Your name"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium mb-2">
+                        Email *
+                      </label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                      Subject *
+                    </label>
+                    <Input
+                      id="subject"
+                      name="subject"
+                      type="text"
+                      required
+                      value={formData.subject}
+                      onChange={handleChange}
+                      placeholder="Project inquiry"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium mb-2">
+                      Message *
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      required
+                      rows={6}
+                      value={formData.message}
+                      onChange={handleChange}
+                      placeholder="Tell me about your project..."
+                      className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
+                    />
+                  </div>
+
+                  <Button type="submit" size="lg" className="w-full">
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Message
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </main>
   )
 }
-
