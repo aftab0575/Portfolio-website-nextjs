@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, smoothScrollToElement } from '@/lib/utils'
 import ThemeSwitcher from '../theme/ThemeSwitcher'
 
 export interface NavigationItem {
@@ -28,6 +28,7 @@ export default function MobileNavigation({
   className
 }: MobileNavigationProps) {
   const pathname = usePathname()
+  const [activeHash, setActiveHash] = useState<string>('')
 
   // Close menu when route changes
   useEffect(() => {
@@ -35,6 +36,31 @@ export default function MobileNavigation({
       onToggle()
     }
   }, [pathname])
+
+  const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (pathname !== '/' || !href.includes('#')) return
+    const hash = href.split('#')[1]
+    if (!hash) return
+    const el = document.getElementById(hash)
+    if (el) {
+      e.preventDefault()
+      smoothScrollToElement(el)
+      window.history.pushState(null, '', `/#${hash}`)
+      onToggle()
+    }
+  }
+
+  // Track hash for single-page section navigation
+  useEffect(() => {
+    const updateHash = () => {
+      if (typeof window === 'undefined') return
+      setActiveHash(window.location.hash || '')
+    }
+
+    updateHash()
+    window.addEventListener('hashchange', updateHash)
+    return () => window.removeEventListener('hashchange', updateHash)
+  }, [])
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -112,13 +138,19 @@ export default function MobileNavigation({
         <nav className="flex-1 px-4 py-6">
           <ul className="space-y-2">
             {menuItems.map((item) => {
-              const isActive = pathname === item.href
+              const normalizedHash = activeHash || '#hero'
+              const itemHash = item.href.includes('#') ? `#${item.href.split('#')[1]}` : ''
+              const isHashLink = itemHash.startsWith('#')
+              const isActive = isHashLink
+                ? pathname === '/' && normalizedHash === itemHash
+                : pathname === item.href
               const Icon = item.icon
 
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    onClick={(e) => handleHashClick(e, item.href)}
                     className={cn(
                       'flex items-center px-4 py-4', // 44px+ touch target height
                       'text-base font-medium rounded-lg',
@@ -128,7 +160,6 @@ export default function MobileNavigation({
                         ? 'bg-primary text-white'
                         : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
                     )}
-                    onClick={onToggle}
                   >
                     {Icon && (
                       <Icon className="mr-3 h-5 w-5 flex-shrink-0" />

@@ -27,3 +27,54 @@
   animation: slideUp 0.5s ease-in-out;
 }
 
+/* Hero Aurora Background (theme-aware) - animation via Framer Motion */
+.hero-aurora-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 50%, hsl(var(--secondary) / 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 50%, hsl(var(--accent) / 0.1), transparent),
+    hsl(var(--background));
+  background-attachment: fixed;
+}
+
+.hero-aurora-blur {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 30%, hsl(var(--primary) / 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, hsl(var(--secondary) / 0.06) 0%, transparent 50%);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+/* Dark mode: stronger aurora so it's visible on dark backgrounds */
+@media (prefers-color-scheme: dark) {
+  .hero-aurora-bg {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.25), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 50%, hsl(var(--secondary) / 0.22), transparent),
+      radial-gradient(ellipse 60% 40% at 0% 50%, hsl(var(--accent) / 0.2), transparent),
+      hsl(var(--background));
+  }
+
+  .hero-aurora-blur {
+    background:
+      radial-gradient(circle at 30% 30%, hsl(var(--primary) / 0.18) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, hsl(var(--secondary) / 0.14) 0%, transparent 50%);
+  }
+}
+
+.dark .hero-aurora-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.25), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 50%, hsl(var(--secondary) / 0.22), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 50%, hsl(var(--accent) / 0.2), transparent),
+    hsl(var(--background));
+}
+
+.dark .hero-aurora-blur {
+  background:
+    radial-gradient(circle at 30% 30%, hsl(var(--primary) / 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, hsl(var(--secondary) / 0.14) 0%, transparent 50%);
+}
+

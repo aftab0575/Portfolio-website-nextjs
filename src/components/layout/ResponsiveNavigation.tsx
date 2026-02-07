@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { cn, smoothScrollToElement } from '@/lib/utils'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import MobileNavigation, { NavigationItem } from './MobileNavigation'
 import ThemeSwitcher from '../theme/ThemeSwitcher'
@@ -34,6 +34,7 @@ export default function ResponsiveNavigation({
   const pathname = usePathname()
   const { isMobile } = useBreakpoint()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activeHash, setActiveHash] = useState<string>('')
   const swipeRef = useRef<SwipeState>({
     startX: 0,
     startY: 0,
@@ -105,8 +106,31 @@ export default function ResponsiveNavigation({
     }
   }, [isMobile, mobileMenuOpen])
 
+  // Track hash for single-page section navigation
+  useEffect(() => {
+    const updateHash = () => {
+      if (typeof window === 'undefined') return
+      setActiveHash(window.location.hash || '')
+    }
+
+    updateHash()
+    window.addEventListener('hashchange', updateHash)
+    return () => window.removeEventListener('hashchange', updateHash)
+  }, [])
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
+  }
+
+  const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (pathname !== '/' || !href.includes('#')) return
+    const hash = href.split('#')[1]
+    if (!hash) return
+    const el = document.getElementById(hash)
+    if (!el) return
+    e.preventDefault()
+    smoothScrollToElement(el)
+    window.history.pushState(null, '', `/#${hash}`)
   }
 
   return (
@@ -135,13 +159,19 @@ export default function ResponsiveNavigation({
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             {menuItems.map((item) => {
-              const isActive = pathname === item.href
+              const normalizedHash = activeHash || '#hero'
+              const itemHash = item.href.includes('#') ? `#${item.href.split('#')[1]}` : ''
+              const isHashLink = itemHash.startsWith('#')
+              const isActive = isHashLink
+                ? pathname === '/' && normalizedHash === itemHash
+                : pathname === item.href
               const Icon = item.icon
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={(e) => handleHashClick(e, item.href)}
                   className={cn(
                     'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md',
                     'transition-colors duration-200',

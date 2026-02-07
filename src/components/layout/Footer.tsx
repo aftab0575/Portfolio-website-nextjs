@@ -1,4 +1,5 @@
 import { siteConfig } from '@/constants/site'
+import { routes } from '@/constants/routes'
 import { Github, Linkedin, Twitter } from 'lucide-react'
 import Link from 'next/link'
 
@@ -15,17 +16,17 @@ export default function Footer() {
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="/about" className="hover:text-white transition">
+                <Link href={routes.sections.about} className="hover:text-white transition">
                   About
                 </Link>
               </li>
               <li>
-                <Link href="/projects" className="hover:text-white transition">
+                <Link href={routes.sections.projects} className="hover:text-white transition">
                   Projects
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white transition">
+                <Link href={routes.sections.contact} className="hover:text-white transition">
                   Contact
                 </Link>
               </li>
