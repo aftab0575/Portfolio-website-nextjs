@@ -15,6 +15,16 @@ const nextConfig = {
     // serverActions now expects an object, not boolean
     serverActions: {},
   },
+  async redirects() {
+    return [
+      // Legacy public pages -> single landing page sections
+      { source: '/about', destination: '/?section=about', permanent: false },
+      { source: '/projects', destination: '/?section=projects', permanent: false },
+      { source: '/skills', destination: '/?section=skills', permanent: false },
+      { source: '/experience', destination: '/?section=experience', permanent: false },
+      { source: '/contact', destination: '/?section=contact', permanent: false },
+    ]
+  },
   // If you had middleware, check Next.js 16 docs to migrate to proxy
 };
 

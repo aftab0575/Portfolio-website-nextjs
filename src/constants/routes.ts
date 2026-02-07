@@ -6,6 +6,15 @@ export const routes = {
   experience: '/experience',
   contact: '/contact',
   themes: '/themes',
+  sections: {
+    hero: '/#hero',
+    about: '/#about',
+    projects: '/#projects',
+    skills: '/#skills',
+    experience: '/#experience',
+    testimonials: '/#testimonials',
+    contact: '/#contact',
+  },
   admin: {
     login: '/admin/login',
     dashboard: '/admin/dashboard',

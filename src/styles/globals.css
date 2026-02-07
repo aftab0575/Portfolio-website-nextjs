@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --color-primary: #0D1B2A;
   --color-secondary: #2A9D8F;
@@ -121,4 +125,34 @@ html {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+/* Stacked Carousel Enhancements */
+.stacked-carousel-container {
+  touch-action: pan-y pinch-zoom;
+}
+
+.stacked-carousel-card {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Smooth touch interactions */
+@media (hover: none) and (pointer: coarse) {
+  .stacked-carousel-card {
+    transition: transform 0.2s ease-out;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .stacked-carousel-card {
+    transition: none !important;
+  }
+  
+  .stacked-carousel-container * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
