@@ -46,6 +46,7 @@ export default function MobileNavigation({
       e.preventDefault()
       smoothScrollToElement(el)
       window.history.pushState(null, '', `/#${hash}`)
+      setActiveHash(`#${hash}`)
       onToggle()
     }
   }
@@ -83,7 +84,7 @@ export default function MobileNavigation({
           'md:hidden flex items-center justify-center',
           'w-11 h-11 rounded-lg', // 44px touch target
           'transition-colors duration-200',
-          'hover:bg-gray-100 active:bg-gray-200',
+          'hover:bg-foreground/10 active:bg-foreground/20',
           'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
           className
         )}
@@ -92,16 +93,16 @@ export default function MobileNavigation({
         aria-expanded={isOpen}
       >
         {isOpen ? (
-          <X className="h-6 w-6 text-gray-700" />
+          <X className="h-6 w-6 text-foreground" />
         ) : (
-          <Menu className="h-6 w-6 text-gray-700" />
+          <Menu className="h-6 w-6 text-foreground" />
         )}
       </button>
 
       {/* Mobile Menu Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
+          className="fixed inset-0 z-40 bg-foreground/30 md:hidden backdrop-blur-sm"
           onClick={onToggle}
           aria-hidden="true"
         />
@@ -111,26 +112,27 @@ export default function MobileNavigation({
       <div
         className={cn(
           'fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw]',
-          'bg-white shadow-xl transform transition-transform duration-300 ease-in-out',
+          'bg-background/90 backdrop-blur-xl border-l border-border shadow-xl',
+          'transform transition-transform duration-300 ease-in-out',
           'md:hidden',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
         {/* Menu Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Navigation</h2>
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">Navigation</h2>
           <button
             className={cn(
               'flex items-center justify-center',
               'w-11 h-11 rounded-lg', // 44px touch target
               'transition-colors duration-200',
-              'hover:bg-gray-100 active:bg-gray-200',
+              'hover:bg-foreground/10 active:bg-foreground/20',
               'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
             )}
             onClick={onToggle}
             aria-label="Close navigation menu"
           >
-            <X className="h-6 w-6 text-gray-700" />
+            <X className="h-6 w-6 text-foreground" />
           </button>
         </div>
 
@@ -155,10 +157,10 @@ export default function MobileNavigation({
                       'flex items-center px-4 py-4', // 44px+ touch target height
                       'text-base font-medium rounded-lg',
                       'transition-colors duration-200',
-                      'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       isActive
-                        ? 'bg-primary text-white'
-                        : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
+                        ? 'text-foreground font-semibold border-0 border-b-2 border-primary'
+                        : 'text-foreground hover:bg-foreground/10 active:bg-foreground/20'
                     )}
                   >
                     {Icon && (
@@ -172,7 +174,7 @@ export default function MobileNavigation({
           </ul>
           
           {/* Theme Switcher for Mobile */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t border-border">
             <ThemeSwitcher variant="grid" showLabel={true} />
           </div>
         </nav>

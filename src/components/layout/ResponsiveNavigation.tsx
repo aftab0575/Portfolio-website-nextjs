@@ -131,33 +131,48 @@ export default function ResponsiveNavigation({
     e.preventDefault()
     smoothScrollToElement(el)
     window.history.pushState(null, '', `/#${hash}`)
+    setActiveHash(`#${hash}`)
   }
 
   return (
-    <nav 
-      className={cn(
-        'bg-white border-b border-gray-200 sticky top-0 z-40',
-        className
-      )}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+    <div className="sticky top-0 z-40 pt-4 px-4 md:px-6">
+      <nav 
+        className={cn(
+          'max-w-6xl mx-auto rounded-2xl',
+          'bg-background/40 backdrop-blur-xl border border-border/50',
+          'supports-[backdrop-filter]:bg-background/30',
+          'shadow-lg shadow-foreground/5',
+          className
+        )}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="flex justify-between items-center h-14 md:h-16 px-4 md:px-6 text-foreground">
           {/* Brand/Logo */}
           <Link 
             href={brandHref} 
+            onClick={(e) => {
+              if (pathname === '/' && brandHref?.includes('#hero')) {
+                const el = document.getElementById('hero')
+                if (el) {
+                  e.preventDefault()
+                  smoothScrollToElement(el)
+                  window.history.pushState(null, '', '/#hero')
+                  setActiveHash('#hero')
+                }
+              }
+            }}
             className={cn(
-              'text-xl font-bold text-primary',
-              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1'
+              'text-xl font-bold text-foreground',
+              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-md px-2 py-1'
             )}
           >
             {logo || brandName}
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-1 ml-4">
             {menuItems.map((item) => {
               const normalizedHash = activeHash || '#hero'
               const itemHash = item.href.includes('#') ? `#${item.href.split('#')[1]}` : ''
@@ -173,12 +188,12 @@ export default function ResponsiveNavigation({
                   href={item.href}
                   onClick={(e) => handleHashClick(e, item.href)}
                   className={cn(
-                    'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md',
+                    'flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl',
                     'transition-colors duration-200',
-                    'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                     isActive
-                      ? 'text-primary bg-primary/10'
-                      : 'text-gray-600 hover:text-primary hover:bg-gray-50'
+                      ? 'text-foreground font-semibold border-0 border-b-2 border-primary rounded-xl'
+                      : 'text-foreground/90 hover:text-accent hover:bg-foreground/5 rounded-xl'
                   )}
                 >
                   {Icon && <Icon className="h-4 w-4" />}
@@ -188,7 +203,9 @@ export default function ResponsiveNavigation({
             })}
             
             {/* Theme Switcher for Desktop */}
-            <ThemeSwitcher variant="dropdown" showLabel={false} />
+            <div className="ml-2 pl-2 border-l border-border/50">
+              <ThemeSwitcher variant="dropdown" showLabel={false} />
+            </div>
           </div>
 
           {/* Mobile Navigation */}
@@ -198,15 +215,15 @@ export default function ResponsiveNavigation({
             menuItems={menuItems}
           />
         </div>
-      </div>
+      </nav>
 
       {/* Swipe indicator for mobile (subtle visual cue) */}
       {isMobile && !mobileMenuOpen && (
         <div 
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary/20 rounded-r-full md:hidden"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary/20 rounded-r-full md:hidden pointer-events-none"
           aria-hidden="true"
         />
       )}
-    </nav>
+    </div>
   )
 }

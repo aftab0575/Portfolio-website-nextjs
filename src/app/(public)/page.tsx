@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, memo, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -22,6 +23,7 @@ import useRenderCount from '@/hooks/useRenderCount'
 import apiClient from '@/services/apiClient'
 import { useToast } from '@/hooks/useToast'
 import { formatDateRange } from '@/utils/formatDate'
+import { computedColorToHex } from '@/lib/utils'
 import { 
   Download, 
   ExternalLink, 
@@ -45,6 +47,8 @@ import {
 } from 'lucide-react'
 import StackedCarousel, { CarouselItem } from '@/components/ui/stacked-carousel'
 import { motion, useReducedMotion } from 'framer-motion'
+
+const TextTrail = dynamic(() => import('@/components/ui/text-trail'), { ssr: false })
 
 // Portfolio data - ready for CMS integration
 const portfolioData = {
@@ -224,29 +228,64 @@ const portfolioData = {
 
 // Colorful floating dots for hero background (sizes in px, theme-aware colors)
 const heroDots = [
-  { size: 12, x: '10%', y: '20%', colorVar: '--primary', duration: 8, delay: 0 },
-  { size: 16, x: '85%', y: '15%', colorVar: '--secondary', duration: 12, delay: 1 },
-  { size: 8, x: '25%', y: '70%', colorVar: '--accent', duration: 10, delay: 2 },
-  { size: 14, x: '70%', y: '80%', colorVar: '--primary', duration: 14, delay: 0.5 },
-  { size: 10, x: '50%', y: '40%', colorVar: '--secondary', duration: 9, delay: 3 },
-  { size: 18, x: '15%', y: '50%', colorVar: '--accent', duration: 11, delay: 1.5 },
-  { size: 8, x: '90%', y: '60%', colorVar: '--primary', duration: 13, delay: 2.5 },
-  { size: 14, x: '40%', y: '85%', colorVar: '--secondary', duration: 7, delay: 0.8 },
-  { size: 12, x: '60%', y: '25%', colorVar: '--accent', duration: 15, delay: 1.2 },
-  { size: 16, x: '30%', y: '35%', colorVar: '--primary', duration: 10, delay: 2 },
-  { size: 8, x: '75%', y: '45%', colorVar: '--secondary', duration: 8, delay: 3.5 },
-  { size: 14, x: '5%', y: '90%', colorVar: '--accent', duration: 11, delay: 0.3 },
-  { size: 10, x: '95%', y: '30%', colorVar: '--primary', duration: 9, delay: 2.2 },
-  { size: 8, x: '55%', y: '65%', colorVar: '--secondary', duration: 12, delay: 1.8 },
-  { size: 16, x: '20%', y: '10%', colorVar: '--accent', duration: 14, delay: 0.7 },
+  { size: 14, x: '10%', y: '20%', colorVar: '--primary', duration: 10, delay: 0, moveX: 40, moveY: -60 },
+  { size: 20, x: '85%', y: '15%', colorVar: '--secondary', duration: 14, delay: 1, moveX: -35, moveY: 50 },
+  { size: 10, x: '25%', y: '70%', colorVar: '--accent', duration: 12, delay: 2, moveX: 45, moveY: -40 },
+  { size: 18, x: '70%', y: '80%', colorVar: '--primary', duration: 16, delay: 0.5, moveX: -50, moveY: -30 },
+  { size: 12, x: '50%', y: '40%', colorVar: '--secondary', duration: 11, delay: 3, moveX: 30, moveY: 55 },
+  { size: 22, x: '15%', y: '50%', colorVar: '--accent', duration: 13, delay: 1.5, moveX: -40, moveY: 45 },
+  { size: 10, x: '90%', y: '60%', colorVar: '--primary', duration: 15, delay: 2.5, moveX: 35, moveY: -50 },
+  { size: 16, x: '40%', y: '85%', colorVar: '--secondary', duration: 9, delay: 0.8, moveX: -45, moveY: 35 },
+  { size: 14, x: '60%', y: '25%', colorVar: '--accent', duration: 17, delay: 1.2, moveX: 50, moveY: 40 },
+  { size: 20, x: '30%', y: '35%', colorVar: '--primary', duration: 11, delay: 2, moveX: -30, moveY: -55 },
+  { size: 10, x: '75%', y: '45%', colorVar: '--secondary', duration: 10, delay: 3.5, moveX: 40, moveY: 50 },
+  { size: 18, x: '5%', y: '90%', colorVar: '--accent', duration: 12, delay: 0.3, moveX: 55, moveY: -35 },
+  { size: 12, x: '95%', y: '30%', colorVar: '--primary', duration: 10, delay: 2.2, moveX: -40, moveY: 45 },
+  { size: 10, x: '55%', y: '65%', colorVar: '--secondary', duration: 14, delay: 1.8, moveX: 35, moveY: -45 },
+  { size: 20, x: '20%', y: '10%', colorVar: '--accent', duration: 15, delay: 0.7, moveX: -50, moveY: 40 },
 ]
+
+// Persist across Strict Mode remounts so we don't flash placeholder after trail has been shown once
+let clientHasMountedOnce = false
 
 // Hero Section Component
 const HeroSection = memo(function HeroSection() {
   const shouldReduceMotion = useReducedMotion()
+  const [hasMounted, setHasMounted] = useState(clientHasMountedOnce)
+  const [trailTextColor, setTrailTextColor] = useState('#18181b')
+  const themeColorRef = useRef<HTMLSpanElement>(null)
+  const activeThemeId = useAppSelector((state) => state.theme.activeTheme?._id) ?? null
+  const heroName = portfolioData.hero.name
+  const afterNameDelay = shouldReduceMotion ? 0.05 : 0.15
+
+  useEffect(() => {
+    if (!clientHasMountedOnce) {
+      clientHasMountedOnce = true
+      setHasMounted(true)
+    }
+  }, [])
+
+  const readThemeColor = () => {
+    if (themeColorRef.current) {
+      const color = getComputedStyle(themeColorRef.current).getPropertyValue('color')
+      setTrailTextColor(computedColorToHex(color))
+    }
+  }
+
+  useEffect(() => {
+    if (!hasMounted) return
+    const id = requestAnimationFrame(readThemeColor)
+    return () => cancelAnimationFrame(id)
+  }, [hasMounted])
+
+  useEffect(() => {
+    if (!hasMounted) return
+    const id = requestAnimationFrame(readThemeColor)
+    return () => cancelAnimationFrame(id)
+  }, [activeThemeId])
 
   return (
-    <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden hero-aurora-bg">
+    <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden hero-aurora-bg -mt-[5.5rem] md:-mt-[6rem] pt-[5.5rem] md:pt-[6rem]">
       {/* Animated aurora blur layer */}
       <motion.div
         className="hero-aurora-blur"
@@ -285,12 +324,12 @@ const HeroSection = memo(function HeroSection() {
               height: dot.size,
               willChange: 'transform, opacity',
             }}
-            initial={{ opacity: 0, x: 0, y: 0, scale: 1 }}
+            initial={{ opacity: 0.2, x: 0, y: 0, scale: 0.8 }}
             animate={{
-              x: [0, 30, -25, 0],
-              y: [0, -50, 40, 0],
-              scale: [1, 1.3, 1],
-              opacity: [0, 0.85, 0],
+              x: [0, dot.moveX, -dot.moveX * 0.6, 0],
+              y: [0, dot.moveY, -dot.moveY * 0.6, 0],
+              scale: [0.9, 1.4, 0.95, 0.9],
+              opacity: [0.4, 0.92, 0.5, 0.4],
             }}
             transition={{
               duration: dot.duration,
@@ -305,11 +344,12 @@ const HeroSection = memo(function HeroSection() {
               style={{
                 width: dot.size,
                 height: dot.size,
-                backgroundColor: `hsl(var(${dot.colorVar}))`,
+                background: `radial-gradient(circle at 30% 30%, hsl(var(${dot.colorVar}) / 0.9), hsl(var(${dot.colorVar}) / 0.4))`,
                 boxShadow: `
-                  0 0 ${dot.size * 2}px hsl(var(${dot.colorVar}) / 0.8),
-                  0 0 ${dot.size * 4}px hsl(var(${dot.colorVar}) / 0.5),
-                  0 0 ${dot.size * 6}px hsl(var(${dot.colorVar}) / 0.3)
+                  0 0 ${dot.size * 3}px hsl(var(${dot.colorVar}) / 0.9),
+                  0 0 ${dot.size * 6}px hsl(var(${dot.colorVar}) / 0.6),
+                  0 0 ${dot.size * 10}px hsl(var(${dot.colorVar}) / 0.4),
+                  inset 0 0 ${dot.size}px hsl(var(${dot.colorVar}) / 0.3)
                 `,
               }}
             />
@@ -319,36 +359,70 @@ const HeroSection = memo(function HeroSection() {
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" aria-hidden="true" />
       
       <div className="container mx-auto px-4 text-center relative z-10">
+        <span ref={themeColorRef} className="text-primary absolute opacity-0 pointer-events-none" aria-hidden />
         <div className="max-w-4xl mx-auto">
-          <motion.h1
-            className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            {portfolioData.hero.name}
-          </motion.h1>
-          <motion.p
-            className="text-xl sm:text-2xl lg:text-3xl text-muted-foreground mb-4 font-medium"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            {portfolioData.hero.role}
-          </motion.p>
-          <motion.p
-            className="text-lg sm:text-xl text-muted-foreground/80 mb-8 max-w-2xl mx-auto leading-relaxed"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            {portfolioData.hero.tagline}
-          </motion.p>
+          <div className="flex flex-col items-center gap-0 mb-6">
+            <div className="flex flex-col items-center gap-0 w-full">
+              <h1 className="w-full m-0">
+                <span className="sr-only">{heroName}</span>
+                <div
+                  className="relative z-0 mx-auto w-full max-w-4xl h-28 sm:h-36 lg:h-44 overflow-hidden rounded-lg isolate"
+                  aria-hidden="true"
+                >
+                  {!hasMounted ? (
+                    <span
+                      className="block w-full h-full text-4xl sm:text-6xl lg:text-7xl font-bold opacity-0"
+                      style={{ fontFamily: 'Figtree' }}
+                    >
+                      {heroName}
+                    </span>
+                  ) : (
+                    <motion.div
+                      className="w-full h-full"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                  <TextTrail
+                    text={heroName}
+                    fontFamily="Figtree"
+                    fontWeight="900"
+                    noiseFactor={0.4}
+                    noiseScale={0.0002}
+                    rgbPersistFactor={0.94}
+                    alphaPersistFactor={0.82}
+                    animateColor={false}
+                    startColor={trailTextColor}
+                    textColor={trailTextColor}
+                    textScale={1.3}
+                  />
+                    </motion.div>
+                  )}
+                </div>
+              </h1>
+              <motion.p
+                className="text-xl sm:text-2xl lg:text-3xl text-muted-foreground font-medium -mt-4 sm:-mt-6 lg:-mt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: afterNameDelay }}
+              >
+                {portfolioData.hero.role}
+              </motion.p>
+            </div>
+            <motion.p
+              className="text-lg sm:text-xl text-muted-foreground/80 max-w-2xl leading-relaxed mt-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: afterNameDelay + 0.05 }}
+            >
+              {portfolioData.hero.tagline}
+            </motion.p>
+          </div>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.35, delay: afterNameDelay + 0.1 }}
           >
             {portfolioData.hero.ctaButtons.map((button, index) => (
               <Link key={index} href={button.href}>
@@ -365,7 +439,7 @@ const HeroSection = memo(function HeroSection() {
             className="flex justify-center gap-6 mt-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            transition={{ duration: 0.35, delay: afterNameDelay + 0.2 }}
           >
             <Link href={siteConfig.social.github} className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-6 h-6" />
@@ -1082,7 +1156,7 @@ const HomePage = memo(function HomePage() {
   }, []) // Empty dependency array prevents infinite loops
 
   return (
-    <main className="overflow-hidden">
+    <main className="overflow-visible">
       <HeroSection />
       <SkillsSection />
       <AboutSection />
