@@ -27,3 +27,26 @@ export function smoothScrollToElement(el: HTMLElement, duration = 400): void {
   }
   requestAnimationFrame(step)
 }
+
+/** Parse computed color string (e.g. "rgb(9, 9, 11)") to hex. */
+export function computedColorToHex(computedColor: string): string {
+  const m = computedColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  if (!m) return '#18181b'
+  const r = parseInt(m[1], 10)
+  const g = parseInt(m[2], 10)
+  const b = parseInt(m[3], 10)
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')
+}
+
+/** Get theme foreground color as hex from an element that has text-foreground (same theme context). */
+export function getThemeForegroundHex(): string {
+  if (typeof document === 'undefined') return '#18181b'
+  const el = document.createElement('span')
+  el.className = 'text-foreground'
+  el.style.setProperty('position', 'absolute')
+  el.style.setProperty('visibility', 'hidden')
+  document.body.appendChild(el)
+  const color = getComputedStyle(el).getPropertyValue('color')
+  document.body.removeChild(el)
+  return computedColorToHex(color)
+}

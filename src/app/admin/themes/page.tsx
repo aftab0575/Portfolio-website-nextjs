@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { fetchThemes, fetchActiveTheme, activateTheme, createTheme } from '@/store/slices/themeSlice'
+import { fetchThemes, fetchActiveTheme, activateTheme, createTheme, deleteTheme } from '@/store/slices/themeSlice'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Palette, Check } from 'lucide-react'
+import { Palette, Check, Trash2 } from 'lucide-react'
 import { Theme } from '@/types/theme'
-import apiClient from '@/services/apiClient'
 
 export default function ThemesPage() {
   const dispatch = useAppDispatch()
@@ -63,6 +62,16 @@ export default function ThemesPage() {
       dispatch(fetchActiveTheme())
     } catch (error) {
       alert('Failed to activate theme')
+    }
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) return
+    try {
+      await dispatch(deleteTheme(id)).unwrap()
+      dispatch(fetchActiveTheme())
+    } catch (error: any) {
+      alert(error || 'Failed to delete theme')
     }
   }
 
@@ -184,16 +193,26 @@ export default function ThemesPage() {
                   </div>
                 </div>
               </div>
-              {!theme.isActive && (
+              <div className="flex gap-2">
+                {!theme.isActive && (
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handleActivate(theme._id!)}
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Activate
+                  </Button>
+                )}
                 <Button
                   variant="outline"
-                  className="w-full"
-                  onClick={() => handleActivate(theme._id!)}
+                  className={theme.isActive ? 'w-full' : ''}
+                  onClick={() => handleDelete(theme._id!, theme.name)}
                 >
-                  <Check className="mr-2 h-4 w-4" />
-                  Activate
+                  <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+                  Delete
                 </Button>
-              )}
+              </div>
             </CardContent>
           </Card>
         ))}
