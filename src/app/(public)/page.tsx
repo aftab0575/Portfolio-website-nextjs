@@ -865,7 +865,23 @@ const ExperienceSection = memo(function ExperienceSection() {
                         </div>
                         <h3 className="text-xl font-semibold mb-1">{exp.role}</h3>
                         <p className="text-primary font-medium mb-3">{exp.company}</p>
-                        <p className="text-muted-foreground mb-4">{exp.description}</p>
+                        {exp.description && (
+                          <div className="text-muted-foreground mb-4">
+                            {exp.description.split('\n').filter(line => line.trim().startsWith('-')).length > 0 ? (
+                              <ul className="list-disc list-inside space-y-1">
+                                {exp.description.split('\n')
+                                  .filter(line => line.trim().startsWith('-'))
+                                  .map((line, idx) => (
+                                    <li key={idx} className="pl-2">
+                                      {line.trim().replace(/^-/, '').trim()}
+                                    </li>
+                                  ))}
+                              </ul>
+                            ) : (
+                              <p>{exp.description}</p>
+                            )}
+                          </div>
+                        )}
                         {exp.techStack?.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {exp.techStack.map((tech) => (
