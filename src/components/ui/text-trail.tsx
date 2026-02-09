@@ -87,6 +87,7 @@ const PERSIST_FRAG = `
 uniform sampler2D sampler;
 uniform float time;
 uniform vec2 mousePos;
+uniform vec3 color;
 uniform float noiseFactor,noiseScale,rgbPersistFactor,alphaPersistFactor;
 varying vec2 v_uv;
 ${SIMPLEX}
@@ -94,7 +95,9 @@ void main(){
   float a=snoise3(vec3(v_uv*noiseFactor,time*.1))*noiseScale;
   float b=snoise3(vec3(v_uv*noiseFactor,time*.1+100.))*noiseScale;
   vec4 t=texture2D(sampler,v_uv+vec2(a,b)+mousePos*.005);
-  gl_FragColor=vec4(t.xyz*rgbPersistFactor,t.a*alphaPersistFactor);
+  float blendTowardPrev=rgbPersistFactor*0.45;
+  vec3 blended=mix(color,t.xyz,blendTowardPrev);
+  gl_FragColor=vec4(blended,t.a*alphaPersistFactor);
 }`
 
 const TEXT_FRAG = `
@@ -166,83 +169,107 @@ const TextTrail: React.FC<TextTrailProps> = ({
     let w = initial.w
     let h = initial.h
 
-    const transparent = backgroundColor == null
-    const renderer = new WebGLRenderer({ antialias: true, alpha: transparent })
-    if (transparent) {
-      renderer.setClearColor(0x000000, 0)
-    } else {
-      renderer.setClearColor(new Color(backgroundColor as number), 1)
-    }
-    renderer.setPixelRatio(window.devicePixelRatio || 1)
-    renderer.setSize(w, h)
-    const canvas = renderer.domElement
-    canvas.style.display = 'block'
-    canvas.style.width = '100%'
-    canvas.style.height = '100%'
-    canvas.style.maxWidth = '100%'
-    canvas.style.maxHeight = '100%'
-    canvas.style.objectFit = 'contain'
-    if (transparent) {
-      canvas.style.background = 'transparent'
-    }
-    el.appendChild(canvas)
+    let setupDone = false
+    let renderer: WebGLRenderer | null = null
+    let rt0: WebGLRenderTarget | null = null
+    let rt1: WebGLRenderTarget | null = null
+    let quadMat: ShaderMaterial | null = null
+    let quad: Mesh | null = null
+    let labelMat: ShaderMaterial | null = null
+    let label: Mesh | null = null
+    let cam: OrthographicCamera | null = null
+    let ro: ResizeObserver | null = null
+    let timer: ReturnType<typeof setInterval> | null = null
 
-    const scene = new Scene()
-    const fluidScene = new Scene()
-    const clock = new Clock()
-    const cam = new OrthographicCamera(-w / 2, w / 2, h / 2, -h / 2, 0.1, 10)
-    cam.position.z = 1
-
-    let rt0 = new WebGLRenderTarget(w, h)
-    let rt1 = rt0.clone()
-    if (transparent) {
-      renderer.setRenderTarget(rt0)
-      renderer.clear()
-      renderer.setRenderTarget(rt1)
-      renderer.clear()
-      renderer.setRenderTarget(null)
+    const target = [0, 0]
+    const onMove = (e: PointerEvent) => {
+      const node = ref.current
+      if (!node) return
+      const r = node.getBoundingClientRect()
+      target[0] = ((e.clientX - r.left) / r.width) * 2 - 1
+      target[1] = ((r.top + r.height - e.clientY) / r.height) * 2 - 1
     }
 
-    const quadMat = new ShaderMaterial({
+    const rafId = requestAnimationFrame(() => {
+      setupDone = true
+      const transparent = backgroundColor == null
+      renderer = new WebGLRenderer({ antialias: true, alpha: transparent })
+      if (transparent) {
+        renderer.setClearColor(0x000000, 0)
+      } else {
+        renderer.setClearColor(new Color(backgroundColor as number), 1)
+      }
+      renderer.setPixelRatio(window.devicePixelRatio || 1)
+      renderer.setSize(w, h)
+      const canvas = renderer.domElement
+      canvas.style.display = 'block'
+      canvas.style.width = '100%'
+      canvas.style.height = '100%'
+      canvas.style.maxWidth = '100%'
+      canvas.style.maxHeight = '100%'
+      canvas.style.objectFit = 'contain'
+      if (transparent) {
+        canvas.style.background = 'transparent'
+      }
+      el.appendChild(canvas)
+
+      const scene = new Scene()
+      const fluidScene = new Scene()
+      const clock = new Clock()
+      cam = new OrthographicCamera(-w / 2, w / 2, h / 2, -h / 2, 0.1, 10)
+      cam.position.z = 1
+
+      rt0 = new WebGLRenderTarget(w, h)
+      rt1 = rt0.clone()
+      if (transparent) {
+        renderer.setRenderTarget(rt0)
+        renderer.clear()
+        renderer.setRenderTarget(rt1)
+        renderer.clear()
+        renderer.setRenderTarget(null)
+      }
+
+      quadMat = new ShaderMaterial({
       uniforms: {
         sampler: { value: null },
         time: { value: 0 },
         mousePos: { value: new Vector2(-1, 1) },
+        color: { value: new Vector3(...persistColor.current) },
         noiseFactor: { value: noiseFactor },
         noiseScale: { value: noiseScale },
         rgbPersistFactor: { value: rgbPersistFactor },
         alphaPersistFactor: { value: alphaPersistFactor },
       },
-      vertexShader: BASE_VERT,
-      fragmentShader: PERSIST_FRAG,
-      transparent: true,
-    })
-    const quad = new Mesh(new PlaneGeometry(w, h), quadMat)
-    fluidScene.add(quad)
+        vertexShader: BASE_VERT,
+        fragmentShader: PERSIST_FRAG,
+        transparent: true,
+      })
+      quad = new Mesh(new PlaneGeometry(w, h), quadMat)
+      fluidScene.add(quad)
 
-    const labelMat = new ShaderMaterial({
+      labelMat = new ShaderMaterial({
       uniforms: {
         sampler: { value: null },
         color: { value: new Vector3(...persistColor.current) },
       },
-      vertexShader: BASE_VERT,
-      fragmentShader: TEXT_FRAG,
-      transparent: true,
-    })
-    const baseSize = Math.min(w, h)
-    const labelW = baseSize * Math.max(1, textScale)
-    const labelH = baseSize
-    const label = new Mesh(new PlaneGeometry(labelW, labelH), labelMat)
-    scene.add(label)
+        vertexShader: BASE_VERT,
+        fragmentShader: TEXT_FRAG,
+        transparent: true,
+      })
+      const baseSize = Math.min(w, h)
+      const labelW = baseSize * Math.max(1, textScale)
+      const labelH = baseSize
+      label = new Mesh(new PlaneGeometry(labelW, labelH), labelMat)
+      scene.add(label)
 
-    const texCanvas = document.createElement("canvas")
-    const ctx = texCanvas.getContext("2d", {
-      alpha: true,
-      colorSpace: "srgb",
-    })!
-    const drawText = () => {
-      const maxTex = Math.min(renderer.capabilities.maxTextureSize, 4096)
-      const texW = Math.min(Math.ceil(maxTex * Math.max(1, textScale)), renderer.capabilities.maxTextureSize)
+      const texCanvas = document.createElement("canvas")
+      const ctx = texCanvas.getContext("2d", {
+        alpha: true,
+        colorSpace: "srgb",
+      })!
+      const drawText = () => {
+        const maxTex = Math.min(renderer!.capabilities.maxTextureSize, 4096)
+        const texW = Math.min(Math.ceil(maxTex * Math.max(1, textScale)), renderer!.capabilities.maxTextureSize)
       const texH = maxTex
       const pixelRatio = (window.devicePixelRatio || 1) * supersample
       texCanvas.width = texW * pixelRatio
@@ -290,93 +317,89 @@ const TextTrail: React.FC<TextTrailProps> = ({
       tex.generateMipmaps = true
       tex.minFilter = LinearMipmapLinearFilter
       tex.magFilter = LinearFilter
-      labelMat.uniforms.sampler.value = tex
-    }
-    loadFont(fontFamily).finally(drawText)
-
-    const mouse = [0, 0]
-    const target = [0, 0]
-    const onMove = (e: PointerEvent) => {
-      const node = ref.current
-      if (!node) return
-      const r = node.getBoundingClientRect()
-      target[0] = ((e.clientX - r.left) / r.width) * 2 - 1
-      target[1] = ((r.top + r.height - e.clientY) / r.height) * 2 - 1
-    }
-    el.addEventListener("pointermove", onMove)
-
-    const ro = new ResizeObserver(() => {
-      const dims = size()
-      if (!dims) return
-      w = dims.w
-      h = dims.h
-      renderer.setSize(w, h)
-      cam.left = -w / 2
-      cam.right = w / 2
-      cam.top = h / 2
-      cam.bottom = -h / 2
-      cam.updateProjectionMatrix()
-      quad.geometry.dispose()
-      quad.geometry = new PlaneGeometry(w, h)
-      rt0.setSize(w, h)
-      rt1.setSize(w, h)
-      label.geometry.dispose()
-      const base = Math.min(w, h)
-      label.geometry = new PlaneGeometry(base * Math.max(1, textScale), base)
-    })
-    ro.observe(el)
-
-    const timer = setInterval(() => {
-      if (!textColor) {
-        targetColor.current = [Math.random(), Math.random(), Math.random()]
+        labelMat!.uniforms.sampler.value = tex
       }
-    }, colorCycleInterval)
+      drawText()
+      loadFont(fontFamily).then(drawText)
+      const mouse = [0, 0]
+      el.addEventListener("pointermove", onMove)
 
-    renderer.setAnimationLoop(() => {
-      const dt = clock.getDelta()
-      if (animateColor && !textColor) {
-        for (let i = 0; i < 3; i++) {
-          persistColor.current[i] += (targetColor.current[i] - persistColor.current[i]) * dt
+      ro = new ResizeObserver(() => {
+        const dims = size()
+        if (!dims) return
+        w = dims.w
+        h = dims.h
+        renderer!.setSize(w, h)
+        cam!.left = -w / 2
+        cam!.right = w / 2
+        cam!.top = h / 2
+        cam!.bottom = -h / 2
+        cam!.updateProjectionMatrix()
+        quad!.geometry.dispose()
+        quad!.geometry = new PlaneGeometry(w, h)
+        rt0!.setSize(w, h)
+        rt1!.setSize(w, h)
+        label!.geometry.dispose()
+        const base = Math.min(w, h)
+        label!.geometry = new PlaneGeometry(base * Math.max(1, textScale), base)
+      })
+      ro.observe(el)
+
+      timer = setInterval(() => {
+        if (!textColor) {
+          targetColor.current = [Math.random(), Math.random(), Math.random()]
         }
-      }
-      const speed = dt * 5
-      mouse[0] += (target[0] - mouse[0]) * speed
-      mouse[1] += (target[1] - mouse[1]) * speed
+      }, colorCycleInterval)
 
-      quadMat.uniforms.mousePos.value.set(mouse[0], mouse[1])
-      quadMat.uniforms.sampler.value = rt1.texture
-      quadMat.uniforms.time.value = clock.getElapsedTime()
-      labelMat.uniforms.color.value.set(...persistColor.current)
+      renderer!.setAnimationLoop(() => {
+        const dt = clock.getDelta()
+        if (animateColor && !textColor) {
+          for (let i = 0; i < 3; i++) {
+            persistColor.current[i] += (targetColor.current[i] - persistColor.current[i]) * dt
+          }
+        }
+        const speed = dt * 5
+        mouse[0] += (target[0] - mouse[0]) * speed
+        mouse[1] += (target[1] - mouse[1]) * speed
 
-      renderer.autoClearColor = false
-      renderer.setRenderTarget(rt0)
-      renderer.clearColor()
-      renderer.render(fluidScene, cam)
-      renderer.render(scene, cam)
-      renderer.setRenderTarget(null)
-      if (transparent) {
-        renderer.clear()
-      }
-      renderer.render(fluidScene, cam)
-      renderer.render(scene, cam)
-      ;[rt0, rt1] = [rt1, rt0]
+        quadMat!.uniforms.mousePos.value.set(mouse[0], mouse[1])
+        quadMat!.uniforms.sampler.value = rt1!.texture
+        quadMat!.uniforms.time.value = clock.getElapsedTime()
+        quadMat!.uniforms.color.value.set(...persistColor.current)
+        labelMat!.uniforms.color.value.set(...persistColor.current)
+
+        renderer!.autoClearColor = false
+        renderer!.setRenderTarget(rt0)
+        renderer!.clearColor()
+        renderer!.render(fluidScene, cam!)
+        renderer!.render(scene, cam!)
+        renderer!.setRenderTarget(null)
+        if (transparent) {
+          renderer!.clear()
+        }
+        renderer!.render(fluidScene, cam!)
+        renderer!.render(scene, cam!)
+        ;[rt0, rt1] = [rt1, rt0]
+      })
     })
 
     return () => {
+      cancelAnimationFrame(rafId)
+      if (!setupDone || !renderer) return
       renderer.setAnimationLoop(null)
-      clearInterval(timer)
+      if (timer) clearInterval(timer)
       el.removeEventListener("pointermove", onMove)
-      ro.disconnect()
+      if (ro) ro.disconnect()
       if (el.contains(renderer.domElement)) {
         el.removeChild(renderer.domElement)
       }
       renderer.dispose()
-      rt0.dispose()
-      rt1.dispose()
-      quadMat.dispose()
-      quad.geometry.dispose()
-      labelMat.dispose()
-      label.geometry.dispose()
+      if (rt0) rt0.dispose()
+      if (rt1) rt1.dispose()
+      if (quadMat) quadMat.dispose()
+      if (quad) quad.geometry.dispose()
+      if (labelMat) labelMat.dispose()
+      if (label) label.geometry.dispose()
     }
   }, [
     text,

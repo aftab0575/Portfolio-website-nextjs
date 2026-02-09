@@ -49,6 +49,10 @@ import StackedCarousel, { CarouselItem } from '@/components/ui/stacked-carousel'
 import { motion, useReducedMotion } from 'framer-motion'
 
 const TextTrail = dynamic(() => import('@/components/ui/text-trail'), { ssr: false })
+const HeroTagline = dynamic(
+  () => import('@/components/hero-tagline'),
+  { ssr: false, loading: () => <span className="inline">Building exceptional digital experiences with modern technologies</span> },
+)
 
 // Portfolio data - ready for CMS integration
 const portfolioData = {
@@ -252,17 +256,22 @@ let clientHasMountedOnce = false
 const HeroSection = memo(function HeroSection() {
   const shouldReduceMotion = useReducedMotion()
   const [hasMounted, setHasMounted] = useState(clientHasMountedOnce)
+  const [taglineMounted, setTaglineMounted] = useState(false)
   const [trailTextColor, setTrailTextColor] = useState('#18181b')
   const themeColorRef = useRef<HTMLSpanElement>(null)
   const activeThemeId = useAppSelector((state) => state.theme.activeTheme?._id) ?? null
   const heroName = portfolioData.hero.name
-  const afterNameDelay = shouldReduceMotion ? 0.05 : 0.15
+  const afterNameDelay = shouldReduceMotion ? 0.05 : 0.3
 
   useEffect(() => {
     if (!clientHasMountedOnce) {
       clientHasMountedOnce = true
       setHasMounted(true)
     }
+    const id = setTimeout(() => {
+      setTaglineMounted(true)
+    }, 100)
+    return () => clearTimeout(id)
   }, [])
 
   const readThemeColor = () => {
@@ -366,22 +375,27 @@ const HeroSection = memo(function HeroSection() {
               <h1 className="w-full m-0">
                 <span className="sr-only">{heroName}</span>
                 <div
-                  className="relative z-0 mx-auto w-full max-w-4xl h-28 sm:h-36 lg:h-44 overflow-hidden rounded-lg isolate"
+                  className="relative z-0 mx-auto w-full max-w-4xl h-40 sm:h-48 lg:h-56 overflow-hidden rounded-lg isolate"
                   aria-hidden="true"
                 >
                   {!hasMounted ? (
                     <span
                       className="block w-full h-full text-4xl sm:text-6xl lg:text-7xl font-bold opacity-0"
                       style={{ fontFamily: 'Figtree' }}
+                      aria-hidden="true"
                     >
                       {heroName}
                     </span>
                   ) : (
                     <motion.div
                       className="w-full h-full"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.25 }}
+                      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
+                      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0.2 }
+                          : { duration: 0.6, ease: 'easeOut' }
+                      }
                     >
                   <TextTrail
                     text={heroName}
@@ -394,35 +408,46 @@ const HeroSection = memo(function HeroSection() {
                     animateColor={false}
                     startColor={trailTextColor}
                     textColor={trailTextColor}
-                    textScale={1.3}
+                    textScale={1.55}
                   />
                     </motion.div>
                   )}
                 </div>
               </h1>
               <motion.p
-                className="text-xl sm:text-2xl lg:text-3xl text-muted-foreground font-medium -mt-4 sm:-mt-6 lg:-mt-8"
+                className="text-xl sm:text-2xl lg:text-3xl text-muted-foreground font-medium -mt-6 sm:-mt-8 lg:-mt-10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: afterNameDelay }}
+                transition={{
+                  duration: shouldReduceMotion ? 0.25 : 0.45,
+                  delay: afterNameDelay,
+                }}
               >
                 {portfolioData.hero.role}
               </motion.p>
             </div>
             <motion.p
-              className="text-lg sm:text-xl text-muted-foreground/80 max-w-2xl leading-relaxed mt-2"
+              className="text-lg sm:text-xl text-muted-foreground/80 max-w-2xl leading-relaxed mt-0.5"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: afterNameDelay + 0.05 }}
+              transition={{
+                duration: shouldReduceMotion ? 0.25 : 0.45,
+                delay: afterNameDelay + 0.08,
+              }}
             >
-              {portfolioData.hero.tagline}
+              {!taglineMounted
+                ? portfolioData.hero.tagline
+                : <HeroTagline />}
             </motion.p>
           </div>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: afterNameDelay + 0.1 }}
+            transition={{
+              duration: shouldReduceMotion ? 0.25 : 0.45,
+              delay: afterNameDelay + 0.16,
+            }}
           >
             {portfolioData.hero.ctaButtons.map((button, index) => (
               <Link key={index} href={button.href}>
@@ -439,7 +464,10 @@ const HeroSection = memo(function HeroSection() {
             className="flex justify-center gap-6 mt-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.35, delay: afterNameDelay + 0.2 }}
+            transition={{
+              duration: shouldReduceMotion ? 0.25 : 0.45,
+              delay: afterNameDelay + 0.24,
+            }}
           >
             <Link href={siteConfig.social.github} className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-6 h-6" />
