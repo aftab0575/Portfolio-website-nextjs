@@ -29,6 +29,10 @@ const projectUpdateSchema = z.object({
   category: z.enum(['Frontend', 'Full-Stack', 'AI']).optional(),
 })
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+}
+
 // Helper function to check if a string is a valid MongoDB ObjectId
 function isValidObjectId(id: string): boolean {
   return /^[0-9a-fA-F]{24}$/.test(id)
@@ -62,10 +66,13 @@ export async function GET(
       )
     }
 
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      data: project,
-    })
+    return NextResponse.json<ApiResponse>(
+      {
+        success: true,
+        data: project,
+      },
+      { headers: CACHE_HEADERS },
+    )
   } catch (error: any) {
     return NextResponse.json<ApiResponse>(
       {

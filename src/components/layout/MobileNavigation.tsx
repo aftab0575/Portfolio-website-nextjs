@@ -102,7 +102,7 @@ export default function MobileNavigation({
       {/* Mobile Menu Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/30 md:hidden backdrop-blur-sm"
+          className="fixed inset-0 z-40 bg-background/45 backdrop-blur-md supports-[backdrop-filter]:bg-background/35 md:hidden"
           onClick={onToggle}
           aria-hidden="true"
         />
@@ -112,7 +112,9 @@ export default function MobileNavigation({
       <div
         className={cn(
           'fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw]',
-          'bg-background/90 backdrop-blur-xl border-l border-border shadow-xl',
+          'flex flex-col rounded-l-2xl overflow-hidden',
+          // Solid background so menu content is not see-through on mobile
+          'bg-background border-l border-border shadow-xl',
           'transform transition-transform duration-300 ease-in-out',
           'md:hidden',
           isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -137,7 +139,7 @@ export default function MobileNavigation({
         </div>
 
         {/* Menu Items */}
-        <nav className="flex-1 px-4 py-6">
+        <nav className="flex-1 px-4 py-6 overflow-y-auto">
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const normalizedHash = activeHash || '#hero'

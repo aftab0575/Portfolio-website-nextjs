@@ -67,6 +67,8 @@ export default function ProjectDetailPage() {
                     alt={project.images[0].alt}
                     fill
                     className="object-cover"
+                    priority
+                    sizes="100vw"
                   />
                 </div>
               </div>

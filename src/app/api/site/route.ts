@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/modules/auth/guards'
-import { getAllThemes, createTheme } from '@/modules/theme/services'
+import { getSite, updateSite } from '@/modules/site/services'
 import { ApiResponse } from '@/types/api'
 import { z } from 'zod'
 
-const themeSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  variables: z.object({
-    primary: z.string(),
-    secondary: z.string(),
-    background: z.string(),
-    foreground: z.string(),
-    accent: z.string(),
-    border: z.string(),
-  }),
+const siteUpdateSchema = z.object({
+  hero: z
+    .object({
+      imageUrl: z.union([z.string().url(), z.literal('')]).optional(),
+      imageAlt: z.string().optional(),
+      publicId: z.string().optional(),
+    })
+    .optional(),
 })
 
 const CACHE_HEADERS = {
@@ -22,48 +20,37 @@ const CACHE_HEADERS = {
 
 export async function GET() {
   try {
-    const themes = await getAllThemes()
-
+    const site = await getSite()
     return NextResponse.json<ApiResponse>(
-      {
-        success: true,
-        data: themes,
-      },
-      { headers: CACHE_HEADERS },
+      { success: true, data: site },
+      { headers: CACHE_HEADERS }
     )
   } catch (error: any) {
     return NextResponse.json<ApiResponse>(
-      {
-        success: false,
-        error: error.message || 'Failed to fetch themes',
-      },
+      { success: false, error: error.message || 'Failed to fetch site' },
       { status: 500 }
     )
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   try {
     const authResult = await requireAuth(request)
     if (!authResult.isAuthenticated) {
       return NextResponse.json<ApiResponse>(
-        {
-          success: false,
-          error: 'Unauthorized',
-        },
+        { success: false, error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
     const body = await request.json()
-    const validatedData = themeSchema.parse(body)
-
-    const theme = await createTheme(validatedData)
+    const validatedData = siteUpdateSchema.parse(body)
+    const site = await updateSite(validatedData)
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: theme,
-      message: 'Theme created successfully',
+      data: site,
+      message: 'Site updated successfully',
     })
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -71,19 +58,14 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Validation error',
-          message: error.errors[0].message,
+          message: error.errors[0]?.message,
         },
         { status: 400 }
       )
     }
-
     return NextResponse.json<ApiResponse>(
-      {
-        success: false,
-        error: error.message || 'Failed to create theme',
-      },
+      { success: false, error: error.message || 'Failed to update site' },
       { status: 500 }
     )
   }
 }
-

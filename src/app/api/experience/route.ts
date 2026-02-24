@@ -13,14 +13,21 @@ const experienceSchema = z.object({
   techStack: z.array(z.string()),
 })
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+}
+
 export async function GET() {
   try {
     const experiences = await getAllExperience()
 
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      data: experiences,
-    })
+    return NextResponse.json<ApiResponse>(
+      {
+        success: true,
+        data: experiences,
+      },
+      { headers: CACHE_HEADERS },
+    )
   } catch (error: any) {
     return NextResponse.json<ApiResponse>(
       {

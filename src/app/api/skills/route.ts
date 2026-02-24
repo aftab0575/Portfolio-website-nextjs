@@ -12,6 +12,10 @@ const skillSchema = z.object({
   isActive: z.boolean(),
 })
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -19,10 +23,13 @@ export async function GET(request: NextRequest) {
 
     const skills = await getAllSkills(activeOnly)
 
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      data: skills,
-    })
+    return NextResponse.json<ApiResponse>(
+      {
+        success: true,
+        data: skills,
+      },
+      { headers: CACHE_HEADERS },
+    )
   } catch (error: any) {
     return NextResponse.json<ApiResponse>(
       {

@@ -23,6 +23,10 @@ const projectSchema = z.object({
   category: z.enum(['Frontend', 'Full-Stack', 'AI']).optional(),
 })
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -39,10 +43,13 @@ export async function GET(request: NextRequest) {
 
     const projects = await getAllProjects(filters)
 
-    return NextResponse.json<ApiResponse>({
-      success: true,
-      data: projects,
-    })
+    return NextResponse.json<ApiResponse>(
+      {
+        success: true,
+        data: projects,
+      },
+      { headers: CACHE_HEADERS },
+    )
   } catch (error: any) {
     return NextResponse.json<ApiResponse>(
       {
