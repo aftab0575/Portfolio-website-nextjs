@@ -4,8 +4,7 @@ import { memo, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Mail } from 'lucide-react'
-import { motion, useInView } from 'framer-motion'
-import StackedCarousel, { CarouselItem } from '@/components/ui/stacked-carousel'
+import { motion } from 'framer-motion'
 import Loader from '@/components/common/Loader'
 import ProjectCard from '@/components/common/ProjectCard'
 import { routes } from '@/constants/routes'
@@ -28,30 +27,12 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
   )
   const hasFetched = useRef(false)
 
-  const sectionRef = useRef<HTMLElement | null>(null)
-  const isInView = useInView(sectionRef, { margin: '-100px', amount: 0.2 })
-
   useEffect(() => {
     if (shouldFetch && !hasFetched.current && !isLoading && !error) {
       hasFetched.current = true
       dispatch(fetchProjects({ isFeatured: true }))
     }
   }, [dispatch, shouldFetch, isLoading, error])
-
-  // Convert projects to carousel format
-  const projectCarouselData: CarouselItem[] = useMemo(
-    () =>
-      featuredProjects.slice(0, 4).map((project) => ({
-        id: project._id ?? project.slug,
-        title: project.title,
-        subtitle: project.techStack?.slice(0, 3).join(' • ') || 'Featured Project',
-        image:
-          project.images?.[0]?.url ||
-          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop',
-        description: project.description,
-      })),
-    [featuredProjects],
-  )
 
   const projectCards = useMemo(
     () =>
@@ -67,14 +48,8 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
     [featuredProjects],
   )
 
-  const handleProjectClick = (project: CarouselItem) => {
-    console.log('Project clicked:', project.title)
-    // Navigate to project detail page
-    // router.push(`/projects/${project.id}`)
-  }
-
   return (
-    <section id="projects" ref={sectionRef} className="py-20 bg-muted/30">
+    <section id="projects" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
         <motion.div
           className="text-center mb-16"
@@ -95,29 +70,7 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
           </div>
         ) : featuredProjects.length > 0 ? (
           <>
-            {projectCarouselData.length > 0 ? (
-              <>
-                {/* Stacked Carousel for Projects */}
-                <StackedCarousel
-                  items={projectCarouselData}
-                  autoPlay={isInView}
-                  autoPlayInterval={8000}
-                  onItemClick={handleProjectClick}
-                  className="mb-8"
-                />
-
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Click projects to view details • Auto-play pauses when out of view
-                  </p>
-                </div>
-              </>
-            ) : (
-              /* Traditional Grid View */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                {projectCards}
-              </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">{projectCards}</div>
 
             <div className="text-center">
               <Link href={routes.sections.contact}>

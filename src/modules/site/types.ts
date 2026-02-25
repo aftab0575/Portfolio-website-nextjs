@@ -11,5 +11,5 @@ export interface Site {
 }
 
 export interface SiteFormData {
-  hero: Partial<SiteHero>
+  hero?: Partial<SiteHero>
 }

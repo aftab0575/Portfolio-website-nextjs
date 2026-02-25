@@ -1,21 +1,13 @@
 'use client'
 
-import { memo, useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
-import StackedCarousel from '@/components/ui/stacked-carousel'
+import { memo } from 'react'
+import { motion } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
 import { portfolioData } from '@/constants/portfolioData'
 
 const TestimonialsSection = memo(function TestimonialsSection() {
-  const sectionRef = useRef<HTMLElement | null>(null)
-  const isInView = useInView(sectionRef, { margin: '-100px', amount: 0.2 })
-
-  const handleTestimonialClick = (testimonial: (typeof portfolioData.testimonials)[number]) => {
-    console.log('Testimonial clicked:', testimonial.title)
-    // Add custom logic here (e.g., open detailed testimonial modal)
-  }
-
   return (
-    <section id="testimonials" ref={sectionRef} className="py-20 bg-background">
+    <section id="testimonials" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <motion.div
           className="text-center mb-16"
@@ -30,18 +22,25 @@ const TestimonialsSection = memo(function TestimonialsSection() {
           </p>
         </motion.div>
 
-        <StackedCarousel
-          items={portfolioData.testimonials}
-          autoPlay={isInView}
-          autoPlayInterval={10000}
-          onItemClick={handleTestimonialClick}
-          className="mb-8"
-        />
-
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Real feedback from real clients • Auto-play pauses when out of view
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {portfolioData.testimonials.map((testimonial) => (
+            <Card key={testimonial.id} className="h-full">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.title}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div>
+                    <h3 className="font-semibold">{testimonial.title}</h3>
+                    <p className="text-sm text-muted-foreground">{testimonial.subtitle}</p>
+                  </div>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">{testimonial.description}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </section>
