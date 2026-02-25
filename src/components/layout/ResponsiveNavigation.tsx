@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn, smoothScrollToElement } from '@/lib/utils'
-import { useBreakpoint } from '@/hooks/useBreakpoint'
 import MobileNavigation, { NavigationItem } from './MobileNavigation'
 import ThemeSwitcher from '../theme/ThemeSwitcher'
 
@@ -32,9 +31,10 @@ export default function ResponsiveNavigation({
   brandHref = '/'
 }: ResponsiveNavigationProps) {
   const pathname = usePathname()
-  const { isMobile } = useBreakpoint()
+  const [isMobile, setIsMobile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeHash, setActiveHash] = useState<string>('')
+  const [hasMounted, setHasMounted] = useState(false)
   const swipeRef = useRef<SwipeState>({
     startX: 0,
     startY: 0,
@@ -43,9 +43,23 @@ export default function ResponsiveNavigation({
     isSwipping: false
   })
 
+  // Track when component has mounted so we don't render
+  // client-only UI (like the swipe indicator) during SSR hydration.
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    const syncIsMobile = () => setIsMobile(mediaQuery.matches)
+    syncIsMobile()
+    mediaQuery.addEventListener('change', syncIsMobile)
+    return () => mediaQuery.removeEventListener('change', syncIsMobile)
+  }, [])
+
   // Swipe gesture configuration
   const SWIPE_THRESHOLD = 50 // Minimum distance for swipe
-  const SWIPE_VELOCITY_THRESHOLD = 0.3 // Minimum velocity
   const MAX_VERTICAL_DEVIATION = 100 // Maximum vertical movement allowed
 
   // Handle touch start for swipe gestures
@@ -139,8 +153,8 @@ export default function ResponsiveNavigation({
       <nav 
         className={cn(
           'max-w-6xl mx-auto rounded-2xl',
-          'bg-background/40 backdrop-blur-xl border border-border/50',
-          'supports-[backdrop-filter]:bg-background/30',
+          'bg-background md:bg-background/40 border border-border/50',
+          'md:backdrop-blur-xl md:supports-[backdrop-filter]:bg-background/30',
           'shadow-lg shadow-foreground/5',
           className
         )}
@@ -218,7 +232,7 @@ export default function ResponsiveNavigation({
       </nav>
 
       {/* Swipe indicator for mobile (subtle visual cue) */}
-      {isMobile && !mobileMenuOpen && (
+      {hasMounted && isMobile && !mobileMenuOpen && (
         <div 
           className="absolute left-4 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary/20 rounded-r-full md:hidden pointer-events-none"
           aria-hidden="true"

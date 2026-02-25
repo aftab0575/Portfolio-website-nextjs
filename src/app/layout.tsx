@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Figtree, Inter } from 'next/font/google'
 import '../styles/globals.css'
 import '../styles/animations.css'
 import StoreProvider from '@/lib/StoreProvider'
@@ -10,6 +10,12 @@ import { defaultMetadata } from '@/constants/seo'
 import { hexToHsl, getForegroundColor, getMutedColors } from '@/utils/themeUtils'
 
 const inter = Inter({ subsets: ['latin'] })
+const figtree = Figtree({
+  subsets: ['latin'],
+  weight: ['900'],
+  variable: '--font-figtree',
+  display: 'swap',
+})
 
 export const metadata: Metadata = defaultMetadata
 
@@ -64,7 +70,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" className={figtree.variable}>
       <head>
         {themeStyles && (
           <style dangerouslySetInnerHTML={{ __html: themeStyles }} />

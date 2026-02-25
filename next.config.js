@@ -9,11 +9,18 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
     ],
+    formats: ['image/avif', 'image/webp'],
   },
   experimental: {
     // serverActions now expects an object, not boolean
     serverActions: {},
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
   async redirects() {
     return [

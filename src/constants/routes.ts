@@ -18,6 +18,7 @@ export const routes = {
   admin: {
     login: '/admin/login',
     dashboard: '/admin/dashboard',
+    site: '/admin/site',
     projects: '/admin/projects',
     skills: '/admin/skills',
     experience: '/admin/experience',
@@ -36,6 +37,7 @@ export const routes = {
     contact: '/api/contact',
     upload: '/api/upload',
     themes: '/api/themes',
+    site: '/api/site',
   },
 } as const
 

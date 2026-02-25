@@ -13,12 +13,14 @@ import {
   Mail,
   Palette,
   LogOut,
+  ImageIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const navigation = [
   { name: 'Dashboard', href: routes.admin.dashboard, icon: LayoutDashboard },
+  { name: 'Site', href: routes.admin.site, icon: ImageIcon },
   { name: 'Projects', href: routes.admin.projects, icon: FolderKanban },
   { name: 'Skills', href: routes.admin.skills, icon: Code },
   { name: 'Experience', href: routes.admin.experience, icon: Briefcase },
