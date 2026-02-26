@@ -156,3 +156,137 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Star border utility */
+.star-border-container {
+  display: block;
+  position: relative;
+}
+
+.star-border-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.border-gradient-bottom {
+  position: absolute;
+  width: 300%;
+  height: 50%;
+  opacity: 0.7;
+  bottom: -12px;
+  right: -250%;
+  border-radius: 50%;
+  animation: star-movement-bottom linear infinite alternate;
+  z-index: 0;
+}
+
+.border-gradient-top {
+  position: absolute;
+  opacity: 0.7;
+  width: 300%;
+  height: 50%;
+  top: -12px;
+  left: -250%;
+  border-radius: 50%;
+  animation: star-movement-top linear infinite alternate;
+  z-index: 0;
+}
+
+.star-border-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-radius: inherit;
+}
+
+@keyframes star-movement-bottom {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-100%, 0%);
+    opacity: 0;
+  }
+}
+
+@keyframes star-movement-top {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100%, 0%);
+    opacity: 0;
+  }
+}
+
+/* Skills section CardSwap: right-aligned stack (right edge clipped), containment, theme-aware cards */
+.skills-card-swap-wrapper {
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+/* Mobile-first: center card stack; desktop: right-aligned with clip */
+.skills-card-swap-wrapper .card-swap-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+  left: 50%;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+}
+
+@media (min-width: 1024px) {
+  .skills-card-swap-wrapper .card-swap-container {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    transform: translate(180px, 0%);
+    transform-origin: top left;
+  }
+}
+
+/* Single container: one dark rounded box for text + cards */
+.skills-single-container {
+  background-color: hsl(var(--card));
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+@media (min-width: 768px) {
+  .skills-single-container {
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .skills-single-container {
+    margin-left: 9rem;
+    margin-right: 9rem;
+  }
+}
+
+.skills-card-swap-wrapper .card.skills-swap-card {
+  top: 90%;
+  left: 60%;
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--card-foreground));
+  border-radius: 1rem;
+  box-shadow:
+    0 0 32px hsl(var(--primary) / 0.15),
+    0 0 16px hsl(var(--accent) / 0.08),
+    0 4px 16px hsl(var(--foreground) / 0.08);
+}

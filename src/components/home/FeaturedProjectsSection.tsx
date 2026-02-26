@@ -1,12 +1,13 @@
 'use client'
 
-import { memo, useEffect, useMemo, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Loader from '@/components/common/Loader'
 import ProjectCard from '@/components/common/ProjectCard'
+import ElectricBorder from '@/components/ElectricBorder'
 import { routes } from '@/constants/routes'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
@@ -17,6 +18,8 @@ import {
 } from '@/store/selectors'
 import { fetchProjects } from '@/store/slices/projectsSlice'
 
+const DEFAULT_BORDER_COLOR = '#7df9ff'
+
 const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
   const dispatch = useAppDispatch()
   const featuredProjects = useAppSelector(selectProjectsForHomePage)
@@ -25,7 +28,22 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
   const shouldFetch = useAppSelector((state) =>
     selectShouldFetchProjects(state, { isFeatured: true }),
   )
+  const activeTheme = useAppSelector((state) => state.theme.activeTheme)
   const hasFetched = useRef(false)
+  const [electricBorderColor, setElectricBorderColor] = useState(DEFAULT_BORDER_COLOR)
+
+  useEffect(() => {
+    if (activeTheme?.variables?.primary) {
+      setElectricBorderColor(activeTheme.variables.primary)
+    } else if (activeTheme?.variables?.accent) {
+      setElectricBorderColor(activeTheme.variables.accent)
+    } else {
+      const cssPrimary = typeof document !== 'undefined'
+        ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+        : ''
+      setElectricBorderColor(cssPrimary || DEFAULT_BORDER_COLOR)
+    }
+  }, [activeTheme])
 
   useEffect(() => {
     if (shouldFetch && !hasFetched.current && !isLoading && !error) {
@@ -37,15 +55,24 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
   const projectCards = useMemo(
     () =>
       featuredProjects.slice(0, 3).map((project) => (
-        <ProjectCard
+        <ElectricBorder
           key={project._id ?? project.slug}
-          project={project}
-          buttonText="View Project"
-          showTechStack
-          maxTechStack={3}
-        />
+          color={electricBorderColor}
+          speed={1}
+          chaos={0.12}
+          borderRadius={16}
+          style={{ borderRadius: 16 }}
+          className="w-full rounded-2xl"
+        >
+          <ProjectCard
+            project={project}
+            buttonText="View Project"
+            showTechStack
+            maxTechStack={3}
+          />
+        </ElectricBorder>
       )),
-    [featuredProjects],
+    [featuredProjects, electricBorderColor],
   )
 
   return (

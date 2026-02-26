@@ -8,6 +8,7 @@ import { siteConfig } from '@/constants/site'
 import { Github, Linkedin, Twitter } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { portfolioData } from '@/constants/portfolioData'
+import SplitText from '@/components/SplitText'
 
 // Colorful floating dots for hero background (sizes in px, theme-aware colors)
 const heroDots = [
@@ -42,27 +43,47 @@ const HeroSection = memo(function HeroSection() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/site')
-      .then((r) => r.json())
-      .then((res) => {
-        if (res?.success && res?.data?.hero?.imageUrl) {
-          setHeroImage({
-            url: res.data.hero.imageUrl,
-            alt: res.data.hero.imageAlt || portfolioData.hero.imageAlt,
-          })
-        } else {
-          setHeroImage({
-            url: portfolioData.hero.imageUrl,
-            alt: portfolioData.hero.imageAlt,
-          })
+    let cancelled = false
+
+    const fallbackHero = {
+      url: portfolioData.hero.imageUrl,
+      alt: portfolioData.hero.imageAlt,
+    }
+
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+    const loadHeroImage = async () => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const response = await fetch('/api/site', { cache: 'no-store' })
+          const res = await response.json()
+          if (cancelled) return
+
+          if (res?.success && res?.data?.hero?.imageUrl) {
+            setHeroImage({
+              url: res.data.hero.imageUrl,
+              alt: res.data.hero.imageAlt || portfolioData.hero.imageAlt,
+            })
+            return
+          }
+          break
+        } catch {
+          if (attempt < 2) {
+            await wait(350 * (attempt + 1))
+          }
         }
-      })
-      .catch(() => {
-        setHeroImage({
-          url: portfolioData.hero.imageUrl,
-          alt: portfolioData.hero.imageAlt,
-        })
-      })
+      }
+
+      if (!cancelled) {
+        setHeroImage(fallbackHero)
+      }
+    }
+
+    void loadHeroImage()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const dotsToRender = isMobileViewport ? heroDots.slice(0, 5) : heroDots
@@ -165,12 +186,31 @@ const HeroSection = memo(function HeroSection() {
                   className="relative z-0 mx-auto w-full max-w-4xl"
                   aria-hidden="true"
                 >
-                  <span
-                    className="block w-full text-center text-4xl font-black leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl [font-family:var(--font-figtree),Figtree,sans-serif]"
-                    aria-hidden="true"
-                  >
-                    {heroName}
-                  </span>
+                  {shouldReduceMotion ? (
+                    <span
+                      className="block w-full text-center text-4xl font-black leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl [font-family:var(--font-figtree),Figtree,sans-serif]"
+                      aria-hidden="true"
+                    >
+                      {heroName}
+                    </span>
+                  ) : (
+                    <SplitText
+                      text={heroName}
+                      className="block w-full text-center text-4xl font-black leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl [font-family:var(--font-figtree),Figtree,sans-serif]"
+                      delay={45}
+                      duration={1.1}
+                      ease="power3.out"
+                      splitType="chars"
+                      from={{ opacity: 0, y: 36 }}
+                      to={{ opacity: 1, y: 0 }}
+                      threshold={0.1}
+                      rootMargin="-80px"
+                      textAlign="center"
+                      tag="span"
+                      immediate
+                      onLetterAnimationComplete={() => {}}
+                    />
+                  )}
                 </div>
               </h1>
               <motion.p

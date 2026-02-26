@@ -10,12 +10,33 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const { activeTheme } = useAppSelector((state) => state.theme)
 
   useEffect(() => {
-    // Only fetch if theme is not already loaded
-    if (!activeTheme) {
-      dispatch(fetchActiveTheme())
+    let cancelled = false
+
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+    const loadTheme = async () => {
+      // Only fetch if theme is not already loaded
+      if (activeTheme) return
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const result = await dispatch(fetchActiveTheme())
+        if (cancelled) return
+
+        if (fetchActiveTheme.fulfilled.match(result) && result.payload) {
+          return
+        }
+
+        if (attempt < 2) {
+          await wait(350 * (attempt + 1))
+        }
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+
+    void loadTheme()
+    return () => {
+      cancelled = true
+    }
+  }, [activeTheme, dispatch])
 
   useEffect(() => {
     if (activeTheme) {

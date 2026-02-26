@@ -4,6 +4,8 @@ import { getSite, updateSite } from '@/modules/site/services'
 import { ApiResponse } from '@/types/api'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const siteUpdateSchema = z.object({
   hero: z
     .object({
@@ -14,16 +16,12 @@ const siteUpdateSchema = z.object({
     .optional(),
 })
 
-const CACHE_HEADERS = {
-  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-}
-
 export async function GET() {
   try {
     const site = await getSite()
     return NextResponse.json<ApiResponse>(
       { success: true, data: site },
-      { headers: CACHE_HEADERS }
+      { headers: { 'Cache-Control': 'no-store' } }
     )
   } catch (error: any) {
     return NextResponse.json<ApiResponse>(
