@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 import { getActiveTheme } from '@/modules/theme/services'
 import { ApiResponse } from '@/types/api'
 
-const CACHE_HEADERS = {
-  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-}
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
@@ -15,7 +13,7 @@ export async function GET() {
         success: true,
         data: theme,
       },
-      { headers: CACHE_HEADERS },
+      { headers: { 'Cache-Control': 'no-store' } },
     )
   } catch (error: any) {
     return NextResponse.json<ApiResponse>(

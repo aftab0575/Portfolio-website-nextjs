@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { cn, smoothScrollToElement } from '@/lib/utils'
 import MobileNavigation, { NavigationItem } from './MobileNavigation'
 import ThemeSwitcher from '../theme/ThemeSwitcher'
+import StarBorder from '@/components/StarBorder'
 
 interface ResponsiveNavigationProps {
   menuItems: NavigationItem[]
@@ -150,19 +151,27 @@ export default function ResponsiveNavigation({
 
   return (
     <div className="sticky top-0 z-40 pt-4 px-4 md:px-6">
-      <nav 
-        className={cn(
-          'max-w-6xl mx-auto rounded-2xl',
-          'bg-background md:bg-background/40 border border-border/50',
-          'md:backdrop-blur-xl md:supports-[backdrop-filter]:bg-background/30',
-          'shadow-lg shadow-foreground/5',
-          className
-        )}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+      <StarBorder
+        as="div"
+        className="max-w-6xl mx-auto rounded-2xl"
+        contentClassName="rounded-2xl"
+        color="hsl(var(--primary) / 0.9)"
+        speed="7s"
+        thickness={1}
       >
-        <div className="flex justify-between items-center h-14 md:h-16 px-4 md:px-6 text-foreground">
+        <nav
+          className={cn(
+            'rounded-2xl',
+            'bg-background md:bg-background/40 border border-border/50',
+            'md:backdrop-blur-xl md:supports-[backdrop-filter]:bg-background/30',
+            'shadow-lg shadow-foreground/5',
+            className
+          )}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="flex justify-between items-center h-14 md:h-16 px-4 md:px-6 text-foreground">
           {/* Brand/Logo */}
           <Link 
             href={brandHref} 
@@ -228,8 +237,9 @@ export default function ResponsiveNavigation({
             onToggle={toggleMobileMenu}
             menuItems={menuItems}
           />
-        </div>
-      </nav>
+          </div>
+        </nav>
+      </StarBorder>
 
       {/* Swipe indicator for mobile (subtle visual cue) */}
       {hasMounted && isMobile && !mobileMenuOpen && (
