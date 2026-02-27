@@ -60,17 +60,35 @@ export default function ProjectDetailPage() {
             )}
 
             {project?.images && project.images.length > 0 && (
-              <div className="mb-8">
-                <div className="relative h-96 w-full rounded-lg overflow-hidden">
+              <div className="mb-8 space-y-4">
+                <div className="relative h-80 sm:h-96 w-full rounded-lg overflow-hidden bg-muted">
                   <Image
                     src={project.images[0].url}
                     alt={project.images[0].alt}
                     fill
                     className="object-cover"
                     priority
-                    sizes="100vw"
+                    sizes="(max-width: 640px) 100vw, 896px"
                   />
                 </div>
+                {project.images.length > 1 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {project.images.map((img, i) => (
+                      <div
+                        key={img.publicId ?? i}
+                        className="relative aspect-video rounded-md overflow-hidden bg-muted"
+                      >
+                        <Image
+                          src={img.url}
+                          alt={img.alt || `${project.title} screenshot ${i + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

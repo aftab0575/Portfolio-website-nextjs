@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Image as ImageIcon, X, Upload } from 'lucide-react'
+import { X, Upload, ChevronUp, ChevronDown } from 'lucide-react'
 import { Image } from '@/types/project'
 import apiClient from '@/services/apiClient'
 
@@ -10,12 +10,15 @@ interface ImageUploadProps {
   images: Image[]
   onChange: (images: Image[]) => void
   maxImages?: number
+  /** Cloudinary folder (e.g. 'portfolio/projects'). Default: 'portfolio' */
+  uploadFolder?: string
 }
 
 export default function ImageUpload({
   images,
   onChange,
   maxImages = 10,
+  uploadFolder = 'portfolio',
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -32,10 +35,10 @@ export default function ImageUpload({
     setUploading(true)
 
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
+      const uploadPromises = Array.from(files).map(async (file, index) => {
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('folder', 'portfolio')
+        formData.append('folder', uploadFolder)
 
         const response = await apiClient.upload<{
           secure_url: string
@@ -46,11 +49,12 @@ export default function ImageUpload({
         }>('/api/upload', formData)
 
         if (response.success && response.data) {
+          const baseName = file.name.replace(/\.[^/.]+$/, '')
           return {
             url: response.data.secure_url,
             publicId: response.data.public_id,
-            alt: file.name,
-            order: images.length,
+            alt: baseName || 'Project image',
+            order: images.length + index,
           }
         }
         throw new Error('Upload failed')
@@ -94,6 +98,11 @@ export default function ImageUpload({
     onChange(reordered)
   }
 
+  const triggerFileInput = () => {
+    if (uploading || images.length >= maxImages) return
+    fileInputRef.current?.click()
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -104,19 +113,18 @@ export default function ImageUpload({
           multiple
           onChange={handleFileSelect}
           className="hidden"
-          id="image-upload"
+          aria-label="Choose images to upload"
         />
-        <label htmlFor="image-upload">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={uploading || images.length >= maxImages}
-            className="w-full"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {uploading ? 'Uploading...' : `Upload Images (${images.length}/${maxImages})`}
-          </Button>
-        </label>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={uploading || images.length >= maxImages}
+          className="w-full"
+          onClick={triggerFileInput}
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          {uploading ? 'Uploading...' : `Upload Images (${images.length}/${maxImages})`}
+        </Button>
       </div>
 
       {images.length > 0 && (
@@ -128,7 +136,29 @@ export default function ImageUpload({
                 alt={image.alt}
                 className="w-full h-32 object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleReorder(index, 'up')}
+                    disabled={index === 0}
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleReorder(index, 'down')}
+                    disabled={index === images.length - 1}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
                 <Button
                   type="button"
                   variant="destructive"
@@ -138,8 +168,8 @@ export default function ImageUpload({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center">
-                Order: {image.order + 1}
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 text-center">
+                {index + 1} of {images.length}
               </div>
             </div>
           ))}

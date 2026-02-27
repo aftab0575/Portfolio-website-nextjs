@@ -1,14 +1,16 @@
 'use client'
 
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Loader from '@/components/common/Loader'
 import ProjectCard from '@/components/common/ProjectCard'
+import ProjectDetailModal from '@/components/projects/ProjectDetailModal'
 import ElectricBorder from '@/components/ElectricBorder'
 import { routes } from '@/constants/routes'
+import { Project } from '@/types/project'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
   selectProjectsForHomePage,
@@ -31,6 +33,21 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
   const activeTheme = useAppSelector((state) => state.theme.activeTheme)
   const hasFetched = useRef(false)
   const [electricBorderColor, setElectricBorderColor] = useState(DEFAULT_BORDER_COLOR)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const handleViewProject = useCallback((project: Project) => {
+    setSelectedProject(project)
+    setModalOpen(true)
+  }, [])
+
+  const handleModalClose = useCallback((open: boolean) => {
+    setModalOpen(open)
+  }, [])
+
+  const handleModalExitComplete = useCallback(() => {
+    setSelectedProject(null)
+  }, [])
 
   useEffect(() => {
     if (activeTheme?.variables?.primary) {
@@ -69,10 +86,11 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
             buttonText="View Project"
             showTechStack
             maxTechStack={3}
+            onViewProject={handleViewProject}
           />
         </ElectricBorder>
       )),
-    [featuredProjects, electricBorderColor],
+    [featuredProjects, electricBorderColor, handleViewProject],
   )
 
   return (
@@ -114,6 +132,13 @@ const FeaturedProjectsSection = memo(function FeaturedProjectsSection() {
           </div>
         )}
       </div>
+
+      <ProjectDetailModal
+        project={selectedProject}
+        open={modalOpen}
+        onOpenChange={handleModalClose}
+        onExitComplete={handleModalExitComplete}
+      />
     </section>
   )
 })
