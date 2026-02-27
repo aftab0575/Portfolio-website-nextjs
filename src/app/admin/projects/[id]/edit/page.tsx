@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProjectFormData } from '@/types/project'
 import apiClient from '@/services/apiClient'
+import ImageUpload from '@/modules/cloudinary/components/ImageUpload'
 
 export default function EditProjectPage() {
   const router = useRouter()
@@ -175,6 +176,19 @@ export default function EditProjectPage() {
                 type="url"
                 value={formData.liveUrl}
                 onChange={(e) => setFormData({ ...formData, liveUrl: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Project photos</label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Upload images to Cloudinary. First image is used as the project cover.
+              </p>
+              <ImageUpload
+                images={formData.images}
+                onChange={(images) => setFormData({ ...formData, images })}
+                maxImages={10}
+                uploadFolder="portfolio/projects"
               />
             </div>
 

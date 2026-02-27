@@ -1,23 +1,74 @@
 import * as React from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface DialogProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  onExitComplete?: () => void
   children: React.ReactNode
 }
 
-const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
-  if (!open) return null
+const EXIT_DURATION = 0.35
+
+const Dialog = ({ open, onOpenChange, onExitComplete, children }: DialogProps) => {
+  const wasOpenRef = useRef(open)
+  const [exitDone, setExitDone] = useState(false)
+  const isExiting = !open && wasOpenRef.current && !exitDone
+  const isVisible = open || isExiting
+
+  useEffect(() => {
+    wasOpenRef.current = open
+    if (open) setExitDone(false)
+  }, [open])
+
+  const handleClose = useCallback(() => {
+    onOpenChange?.(false)
+  }, [onOpenChange])
+
+  const handleExitComplete = useCallback(() => {
+    setExitDone(true)
+    onExitComplete?.()
+  }, [onExitComplete])
+
+  if (!isVisible) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="fixed inset-0 bg-black/50"
-        onClick={() => onOpenChange?.(false)}
+    <motion.div
+      initial={!isExiting ? { opacity: 0 } : false}
+      animate={isExiting ? { opacity: 0 } : { opacity: 1 }}
+      transition={{ duration: isExiting ? EXIT_DURATION : 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
+      <motion.div
+        initial={!isExiting ? { opacity: 0 } : false}
+        animate={isExiting ? { opacity: 0 } : { opacity: 1 }}
+        transition={{ duration: isExiting ? EXIT_DURATION : 0.3, ease: [0.4, 0, 0.2, 1] }}
+        className="fixed inset-0 bg-black/40 backdrop-blur-md"
+        onClick={handleClose}
+        style={{ pointerEvents: isExiting ? 'none' : 'auto' }}
       />
-      <div className="relative z-50">{children}</div>
-    </div>
+      <motion.div
+        initial={!isExiting ? { opacity: 0, scale: 0.2, y: 80 } : false}
+        animate={
+          isExiting
+            ? { opacity: 0, scale: 0.2, y: 80 }
+            : { opacity: 1, scale: 1, y: 0 }
+        }
+        transition={{
+          duration: EXIT_DURATION,
+          ease: [0.32, 0.72, 0, 1],
+        }}
+        onAnimationComplete={() => {
+          if (isExiting) handleExitComplete()
+        }}
+        style={{ transformOrigin: '50% 100%' }}
+        className="relative z-50"
+      >
+        {children}
+      </motion.div>
+    </motion.div>
   )
 }
 
