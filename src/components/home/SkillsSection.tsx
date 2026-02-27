@@ -11,6 +11,7 @@ const TypedCard = Card as ForwardRefExoticComponent<CardPropsWithChildren & RefA
 import { routes } from '@/constants/routes'
 import { portfolioData } from '@/constants/portfolioData'
 import { Code, Server, Database, Cloud, Brain, ExternalLink } from 'lucide-react'
+import StarBorder from '@/components/StarBorder'
 
 const skillCategories = [
   { title: 'Frontend', icon: Code, skills: portfolioData.skills.frontend },
@@ -34,14 +35,21 @@ const SkillsSection = memo(function SkillsSection() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Skills & Technologies</h2>
         </motion.div>
 
-        <div className="skills-single-container flex flex-col lg:flex-row items-stretch rounded-2xl overflow-hidden bg-card border border-border shadow-xl mb-10 min-h-[320px] sm:min-h-[380px] md:min-h-[420px]">
+        <div className="skills-single-container flex flex-col lg:flex-row items-stretch rounded-2xl overflow-hidden bg-card border border-border shadow-xl mb-10 min-h-[320px] sm:min-h-[380px] md:min-h-[420px] lg:min-h-[550px]">
           <div className="flex flex-col justify-center px-4 py-8 sm:px-6 sm:py-10 lg:px-12 lg:py-14 lg:min-w-[320px] lg:max-w-[420px]">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight mb-3">
-              Explore my technical expertise across different domains of software development
-            </p>
-            <p className="text-sm text-muted-foreground">Just look at it go!</p>
+            <div className="space-y-3 sm:space-y-4 max-w-md">
+              <p className="text-xs font-semibold tracking-[0.2em] text-primary/70 uppercase">
+                Skills overview
+              </p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-semibold text-foreground leading-snug">
+                Explore my technical expertise across different domains of software development
+              </p>
+              <p className="text-sm text-muted-foreground/90">
+                Hover over the cards to stop the animation and see the skills in detail !!!
+              </p>
+            </div>
           </div>
-          <div className="skills-card-swap-area relative flex-1 min-h-[320px] sm:min-h-[380px] md:min-h-[420px] overflow-hidden">
+          <div className="skills-card-swap-area relative flex-1 min-h-[320px] sm:min-h-[380px] md:min-h-[420px] lg:min-h-[480px] overflow-hidden">
           <div className="skills-card-swap-wrapper absolute inset-0 overflow-hidden">
             <CardSwap
               sizeToFit
@@ -57,19 +65,27 @@ const SkillsSection = memo(function SkillsSection() {
                   key={index}
                   customClass="skills-swap-card rounded-2xl bg-card border border-border text-foreground shadow-lg overflow-hidden"
                 >
-                  <div className="p-4 sm:p-6 h-full flex flex-col overflow-auto">
-                    <div className="flex items-center mb-4">
-                      <category.icon className="w-6 h-6 text-primary mr-3 flex-shrink-0" />
-                      <h3 className="text-lg font-bold">{category.title}</h3>
+                  <div className="skills-swap-card-inner p-4 sm:p-6 h-full flex flex-col overflow-auto">
+                    <div className="flex items-center gap-3 mb-0.5">
+                      <div className="skills-card-icon-wrap flex items-center justify-center rounded-lg bg-primary/10 text-primary p-1.5">
+                        <category.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      </div>
+                      <h3 className="text-base font-semibold text-foreground">{category.title}</h3>
                     </div>
-                    <div className="space-y-2 flex-1">
+                    <div className="skills-card-divider my-2" aria-hidden />
+                    <div className="grid grid-cols-[30%_70%] gap-x-0.5 gap-y-2 flex-1 min-w-0 overflow-hidden content-start items-start">
                       {category.skills.map((skill, skillIndex) => (
-                        <div
+                        <StarBorder
                           key={skillIndex}
-                          className="text-sm text-muted-foreground bg-background/80 px-3 py-1 rounded-full w-fit"
+                          as="span"
+                          thickness={1}
+                          color="hsl(var(--primary) / 0.6)"
+                          speed="8s"
+                          className="skills-skill-pill block w-fit max-w-[12rem] rounded-xl overflow-hidden"
+                          contentClassName="skills-skill-pill-inner px-3 py-1.5 text-sm font-medium text-muted-foreground bg-muted/90 hover:bg-muted border-0 rounded-xl break-words transition-all duration-200"
                         >
                           {skill}
-                        </div>
+                        </StarBorder>
                       ))}
                     </div>
                   </div>

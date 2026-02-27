@@ -26,11 +26,20 @@ html {
   }
 }
 
-body {
+html,
+body,
+#__next {
   color: var(--color-text);
   background: var(--color-bg);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
+body {
+  touch-action: pan-y;
+}
 
 
 @layer base {
@@ -182,6 +191,8 @@ html {
   border-radius: 50%;
   animation: star-movement-bottom linear infinite alternate;
   z-index: 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .border-gradient-top {
@@ -194,6 +205,16 @@ html {
   border-radius: 50%;
   animation: star-movement-top linear infinite alternate;
   z-index: 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+@media (prefer-reduced-motion: reduce) {
+  .border-gradient-bottom,
+  .border-gradient-top {
+    animation: none;
+    opacity: 0.5;
+  }
 }
 
 .star-border-inner {
@@ -222,6 +243,58 @@ html {
   100% {
     transform: translate(100%, 0%);
     opacity: 0;
+  }
+}
+
+/* Seamless star border for pills (no stop / no reversal) */
+@keyframes star-movement-pill-bottom {
+  0%, 100% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-100%, 0%);
+    opacity: 0.6;
+  }
+}
+
+@keyframes star-movement-pill-top {
+  0%, 100% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(100%, 0%);
+    opacity: 0.6;
+  }
+}
+
+/* GPU layer + animation for pills (avoids layout thrashing) */
+.skills-card-swap-wrapper .skills-skill-pill .border-gradient-bottom,
+.skills-card-swap-wrapper .skills-skill-pill .border-gradient-top {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.skills-card-swap-wrapper .skills-skill-pill .border-gradient-bottom {
+  animation: star-movement-pill-bottom 10s linear infinite;
+}
+
+.skills-card-swap-wrapper .skills-skill-pill .border-gradient-top {
+  animation: star-movement-pill-top 10s linear infinite;
+}
+
+/* Limit repaints to pill area */
+.skills-card-swap-wrapper .skills-skill-pill {
+  contain: layout style paint;
+}
+
+/* No animation when user prefers reduced motion (accessibility + less CPU) */
+@media (prefer-reduced-motion: reduce) {
+  .skills-card-swap-wrapper .skills-skill-pill .border-gradient-bottom,
+  .skills-card-swap-wrapper .skills-skill-pill .border-gradient-top {
+    animation: none;
+    opacity: 0.5;
   }
 }
 
@@ -281,12 +354,39 @@ html {
 .skills-card-swap-wrapper .card.skills-swap-card {
   top: 90%;
   left: 60%;
-  background-color: hsl(var(--card));
-  border-color: hsl(var(--border));
-  color: hsl(var(--card-foreground));
+  /* High-contrast glassy card that pops from the theme background */
+  background:
+    radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.16), transparent 55%),
+    radial-gradient(circle at 100% 100%, hsl(var(--accent) / 0.12), transparent 55%),
+    linear-gradient(145deg, hsl(var(--background) / 0.72), hsl(var(--card) / 0.98));
+  border: 1px solid hsl(var(--primary) / 0.55);
+  color: hsl(var(--foreground));
   border-radius: 1rem;
   box-shadow:
-    0 0 32px hsl(var(--primary) / 0.15),
-    0 0 16px hsl(var(--accent) / 0.08),
-    0 4px 16px hsl(var(--foreground) / 0.08);
+    0 10px 30px hsl(var(--primary) / 0.22),
+    0 0 0 1px hsl(var(--primary) / 0.4);
+  backdrop-filter: blur(8px);
+}
+
+/* Divider between heading and skills list */
+.skills-card-swap-wrapper .skills-card-divider {
+  height: 1px;
+  min-height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.85) 20%,
+    hsl(var(--accent) / 0.9) 80%,
+    transparent 100%
+  );
+  opacity: 1;
+}
+
+/* Skill pills inside cards (StarBorder wrapper) */
+.skills-card-swap-wrapper .skills-skill-pill {
+  letter-spacing: 0.01em;
+}
+
+.skills-card-swap-wrapper .skills-skill-pill-inner {
+  box-shadow: 0 1px 2px hsl(var(--foreground) / 0.05);
 }
