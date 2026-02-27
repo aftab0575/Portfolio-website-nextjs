@@ -45,11 +45,6 @@ const HeroSection = memo(function HeroSection() {
   useEffect(() => {
     let cancelled = false
 
-    const fallbackHero = {
-      url: portfolioData.hero.imageUrl,
-      alt: portfolioData.hero.imageAlt,
-    }
-
     const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
     const loadHeroImage = async () => {
@@ -73,10 +68,6 @@ const HeroSection = memo(function HeroSection() {
           }
         }
       }
-
-      if (!cancelled) {
-        setHeroImage(fallbackHero)
-      }
     }
 
     void loadHeroImage()
@@ -87,8 +78,8 @@ const HeroSection = memo(function HeroSection() {
   }, [])
 
   const dotsToRender = isMobileViewport ? heroDots.slice(0, 5) : heroDots
-  const displayHeroImage = heroImage?.url ?? portfolioData.hero.imageUrl
-  const displayHeroAlt = heroImage?.alt ?? portfolioData.hero.imageAlt
+  const displayHeroImage = heroImage?.url
+  const displayHeroAlt = heroImage?.alt ?? ''
 
   return (
     <section
@@ -305,14 +296,16 @@ const HeroSection = memo(function HeroSection() {
                     'radial-gradient(ellipse 100% 110% at 52% 48%, black 15%, black 38%, transparent 65%)',
                 }}
               >
-                <Image
-                  src={displayHeroImage}
-                  alt={displayHeroAlt}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 90vw, 45vw"
-                  className="object-cover object-center"
-                />
+                {displayHeroImage && (
+                  <Image
+                    src={displayHeroImage}
+                    alt={displayHeroAlt}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 90vw, 45vw"
+                    className="object-cover object-center"
+                  />
+                )}
               </div>
               <div
                 className="pointer-events-none absolute inset-0 z-10"
