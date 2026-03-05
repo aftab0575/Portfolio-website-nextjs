@@ -31,15 +31,37 @@ export async function updateSite(data: SiteFormData): Promise<Site> {
       site = await SiteModel.create({})
     }
     if (data.hero) {
-      site.hero = { ...site.hero, ...data.hero }
+      site.hero = {
+        imageUrl: data.hero.imageUrl ?? site.hero.imageUrl,
+        imageAlt: data.hero.imageAlt ?? site.hero.imageAlt,
+        publicId: data.hero.publicId ?? site.hero.publicId,
+      }
     }
     if (data.aboutImage) {
-      // Ensure aboutImage exists before spreading
-      site.aboutImage = { ...(site.aboutImage || {}), ...data.aboutImage }
+      // Merge about image fields while preserving required strings
+      const current = site.aboutImage || {
+        imageUrl: '',
+        imageAlt: 'About section image',
+        publicId: undefined,
+      }
+      site.aboutImage = {
+        imageUrl: data.aboutImage.imageUrl ?? current.imageUrl,
+        imageAlt: data.aboutImage.imageAlt ?? current.imageAlt,
+        publicId: data.aboutImage.publicId ?? current.publicId,
+      }
     }
     if (data.cv) {
-      // Ensure cv exists before spreading
-      site.cv = { ...(site.cv || {}), ...data.cv }
+      // Merge CV fields while preserving required strings
+      const currentCv = site.cv || {
+        url: '',
+        fileName: 'CV',
+        publicId: undefined,
+      }
+      site.cv = {
+        url: data.cv.url ?? currentCv.url,
+        fileName: data.cv.fileName ?? currentCv.fileName,
+        publicId: data.cv.publicId ?? currentCv.publicId,
+      }
     }
     await site.save()
     const updated = await SiteModel.findById(site._id).lean()
