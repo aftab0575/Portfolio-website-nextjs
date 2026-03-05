@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { routes } from '@/constants/routes'
 import { siteConfig } from '@/constants/site'
 import ResponsiveNavigation from './ResponsiveNavigation'
@@ -21,6 +22,16 @@ export default function Navbar() {
       menuItems={navItems}
       brandName={siteConfig.name}
       brandHref={routes.sections.hero}
+      logo={
+        <Image
+          src="/logo.png"
+          alt={siteConfig.name}
+          width={96}
+          height={96}
+          className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20"
+          priority
+        />
+      }
     />
   )
 }

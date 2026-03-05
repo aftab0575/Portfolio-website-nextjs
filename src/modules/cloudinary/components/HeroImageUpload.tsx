@@ -10,12 +10,16 @@ interface HeroImageUploadProps {
   imageUrl: string
   imageAlt: string
   onChange: (url: string, alt: string, publicId?: string) => void
+  folder?: string
+  inputId?: string
 }
 
 export default function HeroImageUpload({
   imageUrl,
   imageAlt,
   onChange,
+  folder = 'portfolio/hero',
+  inputId = 'hero-image-upload',
 }: HeroImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -39,7 +43,7 @@ export default function HeroImageUpload({
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('folder', 'portfolio/hero')
+      formData.append('folder', folder)
 
       const response = await apiClient.upload<{
         secure_url: string
@@ -71,7 +75,7 @@ export default function HeroImageUpload({
         accept="image/*"
         onChange={handleFileSelect}
         className="hidden"
-        id="hero-image-upload"
+        id={inputId}
       />
       {imageUrl ? (
         <div className="relative inline-block">
@@ -85,7 +89,7 @@ export default function HeroImageUpload({
             />
           </div>
           <div className="mt-2 flex gap-2">
-            <label htmlFor="hero-image-upload">
+            <label htmlFor={inputId}>
               <Button type="button" variant="outline" size="sm" disabled={uploading}>
                 <Upload className="mr-1 h-4 w-4" />
                 {uploading ? 'Uploading...' : 'Replace'}

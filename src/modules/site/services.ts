@@ -33,6 +33,14 @@ export async function updateSite(data: SiteFormData): Promise<Site> {
     if (data.hero) {
       site.hero = { ...site.hero, ...data.hero }
     }
+    if (data.aboutImage) {
+      // Ensure aboutImage exists before spreading
+      site.aboutImage = { ...(site.aboutImage || {}), ...data.aboutImage }
+    }
+    if (data.cv) {
+      // Ensure cv exists before spreading
+      site.cv = { ...(site.cv || {}), ...data.cv }
+    }
     await site.save()
     const updated = await SiteModel.findById(site._id).lean()
     if (!updated) throw new Error('Failed to fetch updated site')
