@@ -391,6 +391,16 @@ html {
   box-shadow: 0 1px 2px hsl(var(--foreground) / 0.05);
 }
 
+/* Hide scrollbar but keep scroll functionality (for modal description) */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
 /* Testimonial cards: glassy, blurred, theme contrast */
 .testimonial-card {
   background: linear-gradient(

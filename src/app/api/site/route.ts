@@ -14,6 +14,20 @@ const siteUpdateSchema = z.object({
       publicId: z.string().optional(),
     })
     .optional(),
+  aboutImage: z
+    .object({
+      imageUrl: z.union([z.string().url(), z.literal('')]).optional(),
+      imageAlt: z.string().optional(),
+      publicId: z.string().optional(),
+    })
+    .optional(),
+  cv: z
+    .object({
+      url: z.union([z.string().url(), z.literal('')]).optional(),
+      fileName: z.string().optional(),
+      publicId: z.string().optional(),
+    })
+    .optional(),
 })
 
 export async function GET() {

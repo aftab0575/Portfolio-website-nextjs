@@ -67,7 +67,7 @@ export default function ProjectDetailModal({
 
         <div className="flex flex-col md:grid md:grid-cols-[35%_65%] min-h-0 flex-1 overflow-y-auto md:overflow-hidden md:min-h-[50vh]">
           {/* Left: Project details (dark) - full height on mobile, scrolls on desktop */}
-          <div className="flex flex-col bg-zinc-900 text-white p-6 py-8 md:py-6 md:rounded-bl-lg overflow-hidden md:overflow-y-auto overflow-x-hidden min-w-0 shrink-0 md:min-h-0">
+          <div className="flex flex-col bg-zinc-900 text-white p-6 py-8 md:py-6 md:rounded-bl-lg overflow-hidden md:overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 shrink-0 md:min-h-0">
             {descriptionLines.length > 0 && (
               <div className="mb-8 md:mb-6 min-w-0">
                 <ul className="space-y-3 md:space-y-2 list-disc list-inside text-zinc-300 text-base md:text-sm leading-relaxed break-words">

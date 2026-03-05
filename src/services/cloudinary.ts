@@ -68,6 +68,62 @@ export async function uploadImage(
   })
 }
 
+export async function uploadFile(
+  file: Buffer | string,
+  folder?: string
+): Promise<CloudinaryUploadResult> {
+  return new Promise((resolve, reject) => {
+    const uploadOptions: any = {
+      // Treat non-image assets like PDFs as raw files and make them publicly accessible
+      resource_type: 'raw' as const,
+      type: 'upload' as const,
+    }
+
+    if (folder) {
+      uploadOptions.folder = folder
+    }
+
+    if (typeof file === 'string') {
+      // Base64 string or remote URL
+      cloudinary.uploader.upload(file, uploadOptions, (error, result) => {
+        if (error) reject(error)
+        else if (result) {
+          resolve({
+            secure_url: result.secure_url,
+            public_id: result.public_id,
+            width: result.width,
+            height: result.height,
+            format: result.format,
+          })
+        } else {
+          reject(new Error('Upload failed'))
+        }
+      })
+    } else {
+      // Buffer
+      const uploadStream = cloudinary.uploader.upload_stream(
+        uploadOptions,
+        (error, result) => {
+          if (error) reject(error)
+          else if (result) {
+            resolve({
+              secure_url: result.secure_url,
+              public_id: result.public_id,
+              width: result.width,
+              height: result.height,
+              format: result.format,
+            })
+          } else {
+            reject(new Error('Upload failed'))
+          }
+        }
+      )
+
+      uploadStream.end(file)
+    }
+  })
+}
+
 export async function deleteImage(publicId: string): Promise<void> {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.destroy(publicId, (error, result) => {

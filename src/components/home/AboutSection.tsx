@@ -1,98 +1,165 @@
 'use client'
 
-import { useState, memo } from 'react'
+import { memo, useEffect, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronRight } from 'lucide-react'
 import { portfolioData } from '@/constants/portfolioData'
+import { routes } from '@/constants/routes'
+
+const aboutCards = [
+  {
+    number: '01',
+    title: 'Experience',
+    body: portfolioData.about.fullBio,
+  },
+  {
+    number: '02',
+    title: 'Journey',
+    body: portfolioData.about.story,
+  },
+  {
+    number: '03',
+    title: 'Approach',
+    body: portfolioData.about.approach,
+  },
+] as const
 
 const AboutSection = memo(function AboutSection() {
-  const [showFullBio, setShowFullBio] = useState(false)
+  const [aboutImage, setAboutImage] = useState<{ url: string; alt: string } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadSite = async () => {
+      try {
+        const res = await fetch('/api/site', { cache: 'no-store' })
+        const json = await res.json()
+        if (cancelled) return
+        if (json?.success && json?.data?.aboutImage?.imageUrl) {
+          setAboutImage({
+            url: json.data.aboutImage.imageUrl,
+            alt: json.data.aboutImage.imageAlt || portfolioData.hero.imageAlt,
+          })
+        }
+      } catch {
+        // Ignore and fall back to static image
+      }
+    }
+
+    void loadSite()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const heroImageUrl = aboutImage?.url
+  const heroImageAlt = aboutImage?.alt ?? 'About section image'
 
   return (
     <section id="about" className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
+          {/* Top: image + text */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-14">
+            {/* Left: circular image */}
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.6 }}
+              className="flex justify-center"
+            >
+              <div
+                className="relative w-56 sm:w-64 lg:w-72"
+                style={{ aspectRatio: '5 / 7' }}
+              >
+                {heroImageUrl ? (
+                  <>
+                    <Image
+                      src={heroImageUrl}
+                      alt={heroImageAlt}
+                      fill
+                      className="object-contain object-top rounded-[2rem]"
+                      sizes="(max-width: 640px) 224px, (max-width: 1024px) 256px, 288px"
+                      priority={false}
+                    />
+                    {/* Bottom fade to background to blend image */}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-[2rem] bg-gradient-to-b from-transparent via-background/80 to-background" />
+                  </>
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-transparent rounded-[2rem]">
+                    <span className="text-5xl" aria-hidden="true">
+                      🙂
+                    </span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Right: heading + copy + CTA */}
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="space-y-5 text-left"
+            >
+              <p className="text-sm font-semibold tracking-[0.2em] uppercase text-primary">
+                About Me
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+                Crafting modern web experiences with a user-first mindset.
+              </h2>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
+                {portfolioData.about.short}
+              </p>
+              <div className="pt-2">
+                <Link href={routes.sections.projects}>
+                  <Button
+                    size="lg"
+                    className="rounded-full px-8"
+                  >
+                    View Projects
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Bottom: three numbered cards */}
           <motion.div
-            className="text-center mb-12"
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.5 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">About Me</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Learn more about my journey, values, and what drives me as a developer.
-            </p>
-          </motion.div>
-
-          <div className="mb-10">
-            <Card>
-              <CardContent className="p-8">
-                <div className="text-lg text-muted-foreground leading-relaxed">
-                  <p className="mb-4">{portfolioData.about.short}</p>
-                  {showFullBio && (
-                    <>
-                      <p className="mb-4">{portfolioData.about.fullBio}</p>
-                      <p className="mb-4">{portfolioData.about.story}</p>
-                      <p>{portfolioData.about.approach}</p>
-                    </>
-                  )}
-                </div>
-
-                <div className="mt-6 flex justify-center">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowFullBio(!showFullBio)}
-                    className="text-primary hover:text-primary/80"
-                  >
-                    {showFullBio ? 'Read Less' : 'Read More'}
-                    <ChevronRight
-                      className={`w-4 h-4 ml-1 transition-transform ${
-                        showFullBio ? 'rotate-90' : ''
-                      }`}
-                    />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-            {portfolioData.about.stats.map((stat, index) => (
-              <Card key={index} className="text-center">
-                <CardContent className="p-6">
-                  <stat.icon className="w-8 h-8 text-primary mx-auto mb-3" />
-                  <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Values */}
-          <div className="mb-6">
-            <h3 className="text-2xl sm:text-3xl font-bold text-center mb-8">My Values</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {portfolioData.about.values.map((value, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                        <value.icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-semibold mb-2">{value.title}</h4>
-                        <p className="text-muted-foreground">{value.description}</p>
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {aboutCards.map((card) => (
+                <Card
+                  key={card.number}
+                  className="h-full border-border/60 bg-card/95 shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
+                >
+                  <CardContent className="p-6 sm:p-7 flex flex-col h-full">
+                    <div className="mb-4 flex items-baseline gap-3">
+                      <span className="text-3xl font-extrabold tracking-tight text-primary">
+                        {card.number}
+                      </span>
+                      <h3 className="text-lg sm:text-xl font-semibold text-foreground">
+                        {card.title}
+                      </h3>
                     </div>
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                      {card.body}
+                    </p>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

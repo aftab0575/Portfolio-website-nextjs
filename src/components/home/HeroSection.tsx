@@ -27,6 +27,7 @@ const HeroSection = memo(function HeroSection() {
   const [hasMounted, setHasMounted] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [heroImage, setHeroImage] = useState<{ url: string; alt: string } | null>(null)
+  const [cv, setCv] = useState<{ url: string; fileName?: string } | null>(null)
   const heroName = portfolioData.hero.name
   const afterNameDelay = shouldReduceMotion ? 0.05 : 0.3
 
@@ -53,12 +54,20 @@ const HeroSection = memo(function HeroSection() {
           const response = await fetch('/api/site', { cache: 'no-store' })
           const res = await response.json()
           if (cancelled) return
+          if (res?.success && res?.data) {
+            if (res.data.hero?.imageUrl) {
+              setHeroImage({
+                url: res.data.hero.imageUrl,
+                alt: res.data.hero.imageAlt || portfolioData.hero.imageAlt,
+              })
+            }
+            if (res.data.cv?.url) {
+              setCv({
+                url: res.data.cv.url,
+                fileName: res.data.cv.fileName,
+              })
+            }
 
-          if (res?.success && res?.data?.hero?.imageUrl) {
-            setHeroImage({
-              url: res.data.hero.imageUrl,
-              alt: res.data.hero.imageAlt || portfolioData.hero.imageAlt,
-            })
             return
           }
           break
@@ -237,7 +246,18 @@ const HeroSection = memo(function HeroSection() {
               }}
             >
               {portfolioData.hero.ctaButtons.map((button, index) => (
-                <Link key={index} href={button.href}>
+                <Link
+                  key={index}
+                  href={
+                    cv && button.text.toLowerCase() === 'download resume' ? '/api/cv' : button.href
+                  }
+                  target={button.text.toLowerCase() === 'download resume' ? '_blank' : undefined}
+                  rel={
+                    button.text.toLowerCase() === 'download resume'
+                      ? 'noopener noreferrer'
+                      : undefined
+                  }
+                >
                   <Button size="lg" variant={button.variant} className="h-12 min-w-[180px]">
                     {button.icon && <button.icon className="mr-2 h-4 w-4" />}
                     {button.text}
